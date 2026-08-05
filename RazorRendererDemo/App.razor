@@ -1,4 +1,9 @@
 ﻿@using RazorRendererDemo.Components
+@using SpawnDev.SpawnJS
+@using SpawnDev.SpawnJS.WebWorkers
+@inject SpawnJSRuntime JS
+@inject WebWorkerService WebWorkerService
+@implements IDisposable
 
 <h3>App</h3>
 
@@ -6,6 +11,7 @@
     <button class="test-button-1" @onclick="IncrementCount">Clicked @count times</button>
     <SomeInfo Name="@name"></SomeInfo>
     <input class="name-input" @bind="name" @bind:event="oninput" />
+    <button @onclick="RunWorkerTest">Run Worker Test</button>
 </div>
 
 
@@ -14,4 +20,19 @@
     string name = "User first name maybe";
 
     void IncrementCount() => count++;
+
+    WebWorker? _worker;
+
+    async Task RunWorkerTest()
+    {
+        _worker ??= await WebWorkerService.GetWebWorker();
+        // the below line will print "Hello from Window" to the console from inside
+        // the created worker, then the worker will be terminated when disposed via the `using` operator
+        await _worker!.Run(() => Console.WriteLine($"Hello from {JS.GlobalScopeName}"));
+    }
+
+    public void Dispose()
+    {
+        _worker?.Dispose();
+    }
 }

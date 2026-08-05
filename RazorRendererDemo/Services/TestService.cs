@@ -1,7 +1,5 @@
 ﻿using SpawnDev;
 using SpawnDev.SpawnJS;
-using System;
-using System.Threading.Tasks;
 
 namespace RazorRendererDemo.Services
 {
