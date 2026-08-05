@@ -1,0 +1,24 @@
+@using SpawnDev.SpawnJS
+@using SpawnDev.SpawnJS.RazorRenderer
+@inject SpawnJSRuntime JS
+
+@* Proves @key gives a 1:1 component<->element lifetime: removing a MIDDLE item removes exactly that
+   item's physical node and leaves every survivor's node untouched (no positional mutate-in-place shift). *@
+<div class="keyed-list">
+    <button class="remove-middle" @onclick="RemoveMiddle">Remove Middle</button>
+    @foreach (var item in _items)
+    {
+        <div @key="item.Id" id="klist-@item.Id" class="klist-item">Item @item.Id</div>
+    }
+</div>
+
+@code {
+    sealed class Item { public int Id; }
+    List<Item> _items = Enumerable.Range(1, 5).Select(i => new Item { Id = i }).ToList();
+
+    void RemoveMiddle()
+    {
+        if (_items.Count == 0) return;
+        _items.RemoveAt(_items.Count / 2);
+    }
+}

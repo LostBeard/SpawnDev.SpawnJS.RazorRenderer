@@ -34,6 +34,15 @@ public sealed class SpawnDomRenderer : Renderer
     /// <summary>Root logical elements whose (host) contents must be cleared on their first render.</summary>
     readonly HashSet<LogicalElement> _clearOnFirstRender = new();
 
+    /// <summary>
+    /// Maps a captured <c>@ref</c> id (the immutable <see cref="ElementReference.Id"/> the framework
+    /// generates once per element insert) to the logical element that owns it. This is how a component
+    /// resolves an <see cref="ElementReference"/> back to its live SpawnJS node <em>without</em> a document
+    /// query - so it works identically inside a shadow root, where <c>getElementById</c>/<c>querySelector</c>
+    /// cannot reach.
+    /// </summary>
+    readonly Dictionary<string, LogicalElement> _refCaptures = new();
+
     /// <summary>Constructs the renderer. Called by DI; components resolve services from <paramref name="serviceProvider"/>.</summary>
     public SpawnDomRenderer(IServiceProvider serviceProvider, SpawnJSRuntime js)
         : this(serviceProvider, js, NullLoggerFactory.Instance) { }
@@ -80,6 +89,33 @@ public sealed class SpawnDomRenderer : Renderer
             return componentId;
         });
     }
+
+    // ─────────────────────────────────────────────── element references ──
+
+    /// <summary>
+    /// Resolves an <see cref="ElementReference"/> captured with <c>@ref</c> to the live SpawnJS node the
+    /// renderer created for it, reinterpreted as <typeparamref name="T"/> (e.g. <c>HTMLVideoElement</c>).
+    /// Returns <see langword="null"/> if the reference is default or its element has left the tree.
+    /// <para>
+    /// Unlike a <c>document.getElementById</c>/<c>querySelector</c> lookup, this reaches the element through
+    /// the renderer's own logical tree, so it works identically whether the component is mounted in the light
+    /// DOM or inside a shadow root. The returned wrapper is a fresh JS reference the caller owns and disposes.
+    /// </para>
+    /// </summary>
+    public T? GetElement<T>(ElementReference reference) where T : SpawnJSObject
+        => string.IsNullOrEmpty(reference.Id) ? null
+         : _refCaptures.TryGetValue(reference.Id, out var le) ? le.Node.JSRefAs<T>()
+         : null;
+
+    /// <summary>
+    /// Resolves an <see cref="ElementReference"/> to the underlying <see cref="Node"/> the renderer holds for
+    /// it (shadow-root safe, no document query). Returns <see langword="null"/> if unresolved. Prefer
+    /// <see cref="GetElement{T}"/> when a typed wrapper is wanted.
+    /// </summary>
+    public Node? GetElementNode(ElementReference reference)
+        => string.IsNullOrEmpty(reference.Id) ? null
+         : _refCaptures.TryGetValue(reference.Id, out var le) ? le.Node
+         : null;
 
     // ─────────────────────────────────────────────────── batch handling ──
 
@@ -240,7 +276,11 @@ public sealed class SpawnDomRenderer : Renderer
             case RenderTreeFrameType.ElementReferenceCapture:
                 if (parent.Node is Element)
                 {
+                    // The framework has already generated this id and set the component's ElementReference
+                    // field (RenderTreeDiffBuilder.InitializeNewElementReferenceCaptureFrame, before this
+                    // batch reached us). Record the id -> node mapping so the component can resolve it.
                     parent.ElementReferenceCaptureId = frame.ElementReferenceCaptureId;
+                    _refCaptures[frame.ElementReferenceCaptureId] = parent;
                     return 0;
                 }
                 throw new InvalidOperationException("Reference capture frames can only be children of element frames.");
@@ -538,6 +578,14 @@ public sealed class SpawnDomRenderer : Renderer
 
     void DisposeListeners(LogicalElement element)
     {
+        // This element is leaving the tree: forget any captured @ref so a stale id can never resolve to a
+        // detached node. Runs before the listener check because a ref-only element has no listeners.
+        if (element.ElementReferenceCaptureId is not null)
+        {
+            _refCaptures.Remove(element.ElementReferenceCaptureId);
+            element.ElementReferenceCaptureId = null;
+        }
+
         if (element.EventListeners is null) return;
         foreach (var reg in element.EventListeners.Values) reg.Callback.Dispose();
         element.EventListeners = null;

@@ -58,6 +58,68 @@ var shadow = host.AttachShadow(new AttachShadowRootOptions { Mode = "open" }); /
 await renderer.RenderComponentAsync<App>(shadow);
 ```
 
+## Element references (`@ref`)
+
+Capture an element with `@ref` and resolve it to a live SpawnJS wrapper through the renderer - with **no**
+`document.getElementById`/`querySelector`, so it works identically in the light DOM and **inside a shadow root**
+(where a document query cannot reach):
+
+```razor
+@inject SpawnDomRenderer SpawnDomRenderer
+
+<video @ref="_videoRef" controls></video>
+
+@code {
+    ElementReference _videoRef;
+    HTMLVideoElement? _video;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _video = SpawnDomRenderer.GetElement<HTMLVideoElement>(_videoRef);
+            _video!.Muted = true;
+            _ = _video.Play();
+        }
+    }
+}
+```
+
+The framework populates the `ElementReference` field before `OnAfterRender` runs; the renderer then resolves it
+from the node it **already holds** in its logical tree - which is why no document query is involved and the
+lookup crosses the shadow boundary. `GetElement<T>(ElementReference)` returns a fresh, owned wrapper (dispose it
+when done); `GetElementNode(ElementReference)` returns the raw `Node`.
+
+## Stable element identity in lists (`@key`)
+
+Blazor's diff is positional by default: remove a **middle** item from a keyless list and the diff mutates the
+surviving elements in place and drops the **last** DOM node - so anything you attached to a specific element (a
+captured `@ref`, a `<video>`, a canvas context) ends up on the wrong item. Add `@key` and the diff performs a
+real removal/permutation instead, giving a **1:1 lifetime between each component / data item and its physical
+element**:
+
+```razor
+@foreach (var item in items)
+{
+    <div @key="item.Id">@item.Name</div>
+}
+```
+
+`SpawnDomRenderer` honors `@key` faithfully - this is verified: removing the middle of a 5-item keyed list
+removes exactly that item's node and leaves every survivor's **original** DOM node in place (checked with a JS
+expando the diff cannot touch). No "hide it with `display:none` until it reaches the end of the list, then
+remove it" workaround is needed to keep an element bound to its data.
+
+## Where this shines
+
+- **Web Components / custom elements** - attach a shadow root in your element's `connectedCallback` and hand it
+  to `RenderComponentAsync`; the element becomes a real interactive Blazor component, fully encapsulated, and
+  `@ref` wires up its internals without ever touching the host document.
+- **Browser extensions / content scripts** - render your UI into a (preferably `closed`) shadow root beside a
+  page you do not control. The page's CSS cannot bleed in, your markup cannot leak out, and because element
+  references resolve through the renderer instead of `document`, the host page's ids and scripts cannot collide
+  with or interfere with yours.
+
 ## ⚠️ Requirement: the host project must import the Web directive namespace
 
 `@onclick`, `@bind` and the other event directives are only recognized when
@@ -73,10 +135,12 @@ nothing** - the app compiles cleanly, boots, and renders. Make sure the project 
 
 ## What works today
 
-- Elements, text, attributes, nested components, regions, keyed reorders, markup blocks (`MarkupString`)
+- Elements, text, attributes, nested components, regions, markup blocks (`MarkupString`)
 - `@onclick` and the mouse/keyboard/focus events; `@bind` / `@bind:event`
 - `StateHasChanged` re-render, component lifecycle, parameter flow into child components
 - `EventCallback`s and typed `EventArgs` (`MouseEventArgs`, `KeyboardEventArgs`, `ChangeEventArgs`, ...)
+- `@ref` / `ElementReference` resolved to a live SpawnJS wrapper, shadow-root safe (no document query)
+- `@key` reorders and removals with a verified 1:1 component-to-element lifetime
 - Mounting into a plain element or an open/closed shadow root
 
 Not yet ported from Blazor's renderer (contributions welcome): the full special-property set beyond `<input>`

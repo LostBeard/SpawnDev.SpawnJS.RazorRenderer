@@ -12,6 +12,12 @@
     <SomeInfo Name="@name"></SomeInfo>
     <input class="name-input" @bind="name" @bind:event="oninput" />
     <button @onclick="RunWorkerTest">Run Worker Test</button>
+    <button @onclick="ToggleVideoPlayer">Toggle Video Player</button>
+    @if (_showVideoPlayer)
+    {
+        <VideoPlayerA />
+    }
+    <KeyedListTest />
 </div>
 
 
@@ -23,12 +29,19 @@
 
     WebWorker? _worker;
 
+    bool _showVideoPlayer = false;
+
     async Task RunWorkerTest()
     {
         _worker ??= await WebWorkerService.GetWebWorker();
         // the below line will print "Hello from Window" to the console from inside
         // the created worker, then the worker will be terminated when disposed via the `using` operator
         await _worker!.Run(() => Console.WriteLine($"Hello from {JS.GlobalScopeName}"));
+    }
+
+    void ToggleVideoPlayer()
+    {
+        _showVideoPlayer = !_showVideoPlayer;
     }
 
     public void Dispose()

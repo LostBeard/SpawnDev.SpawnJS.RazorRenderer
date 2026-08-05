@@ -4,7 +4,8 @@
 		<TargetFrameworks>net10.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Version>1.0.1</Version>
+		<Version>1.0.2</Version>
+		<PackageReleaseNotes>v1.0.2 - ElementReference support.</PackageReleaseNotes>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<EmbedAllSources>true</EmbedAllSources>
@@ -33,7 +34,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.10" />
-		<PackageReference Include="SpawnDev.SpawnJS" Version="1.1.5" />
+		<PackageReference Include="SpawnDev.SpawnJS" Version="1.1.6" />
 	</ItemGroup>
 
 	<ItemGroup>

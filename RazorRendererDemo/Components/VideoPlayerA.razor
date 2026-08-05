@@ -1,0 +1,95 @@
+@using SpawnDev.SpawnJS
+@using SpawnDev.SpawnJS.JSObjects
+@using SpawnDev.SpawnJS.RazorRenderer
+@inject SpawnJSRuntime JS;
+@inject SpawnDomRenderer SpawnDomRenderer;
+@implements IDisposable
+
+<div style="border: 2px solid blue;">
+    <video @ref="_videoRef" width="500" height="500" style="border: 2px solid red;" controls></video>
+    <canvas @ref="_canvasRef" width="500" height="500" style="border: 2px solid yellow;"></canvas>
+</div>
+
+@code {
+    // @ref capture - resolved through the renderer's logical tree, NOT document.GetElementById, so this
+    // works identically in the light DOM and inside a shadow root (where getElementById can't reach).
+    ElementReference _videoRef;
+    ElementReference _canvasRef;
+
+    HTMLVideoElement? _video;
+    HTMLCanvasElement? _canvas;
+    CanvasRenderingContext2D? _ctx;
+    string _id = Guid.NewGuid().ToString();
+    int _renderCount = 0;
+    string _videoSrc = "https://github.com/chintan9/Big-Buck-Bunny/raw/refs/heads/master/BigBuckBunny720p30s.mp4";
+
+    protected override void OnInitialized()
+    {
+        JS.Log($"{this.GetType().Name} Id: {_id} OnInitialized");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _renderCount++;
+        JS.Log($"{this.GetType().Name} Id: {_id} OnAfterRenderAsync renderCount: {_renderCount}");
+        if (firstRender)
+        {
+            // Resolve the captured element references to live SpawnJS wrappers via the renderer.
+            _canvas = SpawnDomRenderer.GetElement<HTMLCanvasElement>(_canvasRef);
+            if (_canvas != null)
+            {
+                _ctx = _canvas!.Get2DContext();
+                // video
+                _video = SpawnDomRenderer.GetElement<HTMLVideoElement>(_videoRef);
+                // video player events
+                _video!.OnLoadedMetadata += Video_OnLoadedMetadata;
+                // properties
+                _video.Muted = true;
+                _video.DefaultMuted = true;
+                _video.AutoPlay = true;
+                _video.SetAttribute("playsinline", "");
+                // try to start the default test video
+                _video.Src = _videoSrc;
+                _video.Load();
+                try
+                {
+                    await _video.Play();
+                }
+                catch (Exception ex)
+                {
+                    JS.Log("ERROR: Autoplay was prevented, waiting for user interaction.", ex.ToString());
+                }
+            }
+            else
+            {
+                JS.Log($"ERROR: {this.GetType().Name} Id: {_id} Canvas not found.");
+            }
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    void Video_OnLoadedMetadata()
+    {
+        JS.Log($"{this.GetType().Name} Id: {_id} Video_OnLoadedMetadata: {_video?.VideoWidth}x{_video?.VideoHeight}");
+    }
+
+    protected override bool ShouldRender()
+    {
+        var ret = base.ShouldRender();
+        JS.Log($"{this.GetType().Name} Id: {_id} ShouldRender: {ret} renderCount: {_renderCount}");
+        return ret;
+    }
+
+    public void Dispose()
+    {
+        JS.Log($"{this.GetType().Name} Id: {_id} Dispose");
+        _ctx?.Dispose();
+        _canvas?.Dispose();
+        if (_video != null)
+        {
+            _video.OnLoadedMetadata -= Video_OnLoadedMetadata;
+            _video.Dispose();
+            _video = null;
+        }
+    }
+}

@@ -5,10 +5,12 @@
 		<CompressionEnabled>false</CompressionEnabled>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<!-- Disables the Hot Reload background client for WASM -->
+		<WasmEnableHotReload>false</WasmEnableHotReload>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SpawnDev.SpawnJS.WebWorkers" Version="1.0.2" />
+		<PackageReference Include="SpawnDev.SpawnJS.WebWorkers" Version="1.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>
