@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="RazorRendererDemo/RazorRendererDemo.csproj" Id="1000a578-b123-47fd-966e-2498429a3328" />
+  <Project Path="SpawnDev.SpawnJS.RazorRenderer/SpawnDev.SpawnJS.RazorRenderer.csproj" />
+</Solution>

@@ -1,0 +1,17 @@
+﻿@using RazorRendererDemo.Components
+
+<h3>App</h3>
+
+<div>
+    <button class="test-button-1" @onclick="IncrementCount">Clicked @count times</button>
+    <SomeInfo Name="@name"></SomeInfo>
+    <input class="name-input" @bind="name" @bind:event="oninput" />
+</div>
+
+
+@code {
+    int count = 0;
+    string name = "User first name maybe";
+
+    void IncrementCount() => count++;
+}
