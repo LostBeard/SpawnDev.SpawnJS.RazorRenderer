@@ -10,9 +10,7 @@ using SpawnDev.SpawnJS.WebWorkers;
 var builder = SpawnJSAppBuilder.CreateDefault(args, out var JS);
 
 // Adds auto-generated App style sheet and auto-generated RCL stylesheet (fingerprinting and compression disabled)
-builder.RootComponents.AddSharedStyleSheet(
-    "RazorRendererDemo.styles.css",
-    "SpawnDev.SpawnJS.RazorUI.bundle.scp.css");
+builder.RootComponents.AddSharedStyleSheet("RazorRendererDemo.styles.css");
 
 // Add root components
 builder.RootComponents.Add<App>();

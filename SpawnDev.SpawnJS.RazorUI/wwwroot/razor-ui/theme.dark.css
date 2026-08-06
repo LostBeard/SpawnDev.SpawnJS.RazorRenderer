@@ -8,4 +8,6 @@
   --ui-border: #33333f;
   --ui-radius: 10px;
   --ui-shadow: 0 1px 3px rgba(0,0,0,.5);
+  --ui-hover: rgba(255,255,255,.10);
+  --ui-hover-strong: rgba(255,255,255,.18);
 }

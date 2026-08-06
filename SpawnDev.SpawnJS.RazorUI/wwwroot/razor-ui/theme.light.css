@@ -9,4 +9,6 @@
   --ui-border: #e2e2ea;
   --ui-radius: 10px;
   --ui-shadow: 0 1px 3px rgba(0,0,0,.10);
+  --ui-hover: rgba(0,0,0,.06);
+  --ui-hover-strong: rgba(0,0,0,.12);
 }

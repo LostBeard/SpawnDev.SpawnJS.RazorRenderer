@@ -34,6 +34,20 @@
         </UiStack>
     </UiCard>
 
+    <UiCard Title="Media controls (preview)">
+        <UiStack Gap="0.6rem" style="margin-top:.5rem;">
+            <UiSlider @bind-Value="_progress" Min="0" Max="100" />
+            <UiStack Horizontal="true" Gap="0.15rem" style="align-items:center;">
+                <UiIconButton Icon="skip-previous" AriaLabel="Previous" />
+                <UiIconButton Icon="@(_playing ? "pause" : "play")" AriaLabel="Play/Pause" OnClick="@(() => _playing = !_playing)" />
+                <UiIconButton Icon="stop" AriaLabel="Stop" OnClick="@(() => _playing = false)" />
+                <UiIconButton Icon="skip-next" AriaLabel="Next" />
+                <UiIconButton Icon="@(_muted ? "volume-mute" : "volume")" AriaLabel="Mute" OnClick="@(() => _muted = !_muted)" />
+                <UiIconButton Icon="fullscreen" AriaLabel="Fullscreen" />
+            </UiStack>
+        </UiStack>
+    </UiCard>
+
     <UiDialog @bind-Open="_dialogOpen" Title="Hello from RazorUI">
         This dialog is rendered by SpawnDomRenderer and styled by the adopted RazorUI sheet. Click the backdrop to close.
     </UiDialog>
@@ -45,6 +59,8 @@
     double _progress = 42;
     bool _dialogOpen;
     bool _dark;
+    bool _playing;
+    bool _muted;
 
     void IncrementCount() => _count++;
     void ToggleTheme()
