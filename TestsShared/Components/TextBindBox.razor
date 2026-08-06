@@ -1,0 +1,11 @@
+@* Two-way @bind over a text input on the oninput event. Setting the input's value and dispatching a real
+   'input' Event (now constructible via SpawnJS 1.1.8) drives the renderer's change/input handling, which
+   reads HTMLInputElement.Value and binds it back into _text - the echo span reflecting it proves it. *@
+<div data-textbind>
+    <input type="text" data-text @bind="_text" @bind:event="oninput" />
+    <span data-echo>@_text</span>
+</div>
+
+@code {
+    string _text = "";
+}

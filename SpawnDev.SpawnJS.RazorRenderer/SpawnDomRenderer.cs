@@ -292,7 +292,7 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
                 await component.ConfigureHostCallback(component);
             }
             // render the component
-            component.ComponentId = await RenderComponentAsync(component.ComponentType, component.ShadowRoot);
+            component.ComponentId = await RenderComponentAsync(component.ComponentType, component.ShadowRoot, component.Parameters);
         }
         else
         {
@@ -302,7 +302,7 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
                 await component.ConfigureHostCallback(component);
             }
             // render the component
-            component.ComponentId = await RenderComponentAsync(component.ComponentType, component.Host);
+            component.ComponentId = await RenderComponentAsync(component.ComponentType, component.Host, component.Parameters);
         }
     }
 
@@ -324,11 +324,25 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
         => RenderComponentAsync(typeof(TComponent), host, parameters);
 
     /// <summary>
+    /// Renders <typeparamref name="TComponent"/> as a root component into <paramref name="host"/> with the
+    /// given root parameters.
+    /// </summary>
+    public Task<int> RenderComponentAsync<TComponent>(Node host, ParameterView parameters)
+        where TComponent : IComponent
+        => RenderComponentAsync(typeof(TComponent), host, parameters);
+
+    /// <summary>
     /// Renders <paramref name="componentType"/> as a root component into <paramref name="host"/>.
     /// </summary>
     public Task<int> RenderComponentAsync(Type componentType, Node host, Dictionary<string, object?>? parameters = null)
+        => RenderComponentAsync(componentType, host, parameters is null ? ParameterView.Empty : ParameterView.FromDictionary(parameters));
+
+    /// <summary>
+    /// Renders <paramref name="componentType"/> as a root component into <paramref name="host"/> with the
+    /// given root parameters.
+    /// </summary>
+    public Task<int> RenderComponentAsync(Type componentType, Node host, ParameterView parameters)
     {
-        var parameterView = parameters is null ? ParameterView.Empty : ParameterView.FromDictionary(parameters);
         return Dispatcher.InvokeAsync(async () =>
         {
             var rootLogical = new LogicalElement { Node = host };
@@ -336,7 +350,7 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
             var componentId = AssignRootComponentId(component);
             _componentLocations[componentId] = rootLogical;
             _clearOnFirstRender.Add(rootLogical);
-            await RenderRootComponentAsync(componentId, parameterView);
+            await RenderRootComponentAsync(componentId, parameters);
             return componentId;
         });
     }

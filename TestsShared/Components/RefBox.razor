@@ -1,0 +1,21 @@
+@* Captures an element via @ref and hands the ElementReference out through a callback so the test can resolve
+   it against the SAME renderer that rendered this component - proving @ref resolution works without any
+   document query (and therefore works identically inside a shadow root). *@
+<div @ref="_ref" data-ref-target>ref target</div>
+
+@code {
+    [Parameter] public Action<ElementReference>? OnRef { get; set; }
+
+    ElementReference _ref;
+    bool _sent;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        // fire once, the first render at which the @ref has been captured
+        if (!_sent && !string.IsNullOrEmpty(_ref.Id))
+        {
+            _sent = true;
+            OnRef?.Invoke(_ref);
+        }
+    }
+}

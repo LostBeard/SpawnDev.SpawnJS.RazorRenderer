@@ -1,0 +1,11 @@
+@* Two-way @bind over a checkbox. A native click() toggles checked and fires 'change', which the renderer
+   turns into a ChangeEventArgs (Value = checked bool) and binds back into _on - so the span reflects state
+   without any synthetic event. *@
+<div data-bindbox>
+    <input type="checkbox" data-toggle @bind="_on" />
+    <span data-state>@(_on ? "on" : "off")</span>
+</div>
+
+@code {
+    bool _on;
+}

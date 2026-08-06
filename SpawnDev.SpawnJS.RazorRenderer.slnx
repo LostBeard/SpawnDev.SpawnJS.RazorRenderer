@@ -5,4 +5,7 @@
   <Project Path="RazorRendererDemo/RazorRendererDemo.csproj" Id="1000a578-b123-47fd-966e-2498429a3328" />
   <Project Path="SpawnDev.SpawnJS.RazorRenderer/SpawnDev.SpawnJS.RazorRenderer.csproj" />
   <Project Path="SpawnDev.SpawnJS.RazorUI/SpawnDev.SpawnJS.RazorUI.csproj" />
+  <Project Path="TestsShared/TestsShared.csproj" />
+  <Project Path="WasmTestHost/WasmTestHost.csproj" />
+  <Project Path="TestRunner/TestRunner.csproj" />
 </Solution>

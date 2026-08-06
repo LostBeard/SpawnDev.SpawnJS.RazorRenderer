@@ -39,7 +39,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Root component parameters
         /// </summary>
-        public ParameterView? Parameters { get; private set; }
+        public ParameterView Parameters { get; private set; } = ParameterView.Empty;
         /// <summary>
         /// Optional shadow root options specified if the renderer should render to the shadow root of the target
         /// </summary>
@@ -47,7 +47,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, string? selector, AttachShadowRootOptions? shadowRootOptions, ParameterView? parameters)
+        public SpawnJSRootComponentMapping(Type componentType, string? selector, AttachShadowRootOptions? shadowRootOptions, ParameterView parameters)
         {
             ComponentType = componentType;
             Selector = selector;
@@ -77,7 +77,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, string? selector, ParameterView? parameters)
+        public SpawnJSRootComponentMapping(Type componentType, string? selector, ParameterView parameters)
         {
             ComponentType = componentType;
             Selector = selector;
@@ -86,7 +86,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, Element? host, AttachShadowRootOptions? shadowRootOptions, ParameterView? parameters)
+        public SpawnJSRootComponentMapping(Type componentType, Element? host, AttachShadowRootOptions? shadowRootOptions, ParameterView parameters)
         {
             ComponentType = componentType;
             Host = host;
@@ -96,7 +96,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, Element? host, ParameterView? parameters)
+        public SpawnJSRootComponentMapping(Type componentType, Element? host, ParameterView parameters)
         {
             ComponentType = componentType;
             Host = host;
@@ -105,7 +105,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, AttachShadowRootOptions? shadowRootOptions, ParameterView? parameters)
+        public SpawnJSRootComponentMapping(Type componentType, AttachShadowRootOptions? shadowRootOptions, ParameterView parameters)
         {
             ComponentType = componentType;
             ShadowRootOptions = shadowRootOptions;
@@ -114,7 +114,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, ParameterView? parameters)
+        public SpawnJSRootComponentMapping(Type componentType, ParameterView parameters)
         {
             ComponentType = componentType;
             Parameters = parameters;

@@ -1,0 +1,10 @@
+@* A minimal interactive component: a button that increments a counter shown in a span. Exercises
+   @onclick -> handler -> StateHasChanged -> DOM update, the full interactive round trip. *@
+<div data-counter>
+    <button data-increment @onclick="() => _count++">Increment</button>
+    <span data-count>@_count</span>
+</div>
+
+@code {
+    int _count;
+}

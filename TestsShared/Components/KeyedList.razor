@@ -1,0 +1,16 @@
+@* A @key'd list with a button that removes the MIDDLE item. @key makes the renderer do a real removal
+   (not Blazor's keyless positional shift), so every surviving item keeps its own physical DOM node. The
+   test stamps a non-render expando on each node before removal and checks it still matches after. *@
+<div data-list>
+    @foreach (var item in _items)
+    {
+        <div @key="item" data-item>@item</div>
+    }
+</div>
+<button data-remove-middle @onclick="RemoveMiddle">remove middle</button>
+
+@code {
+    readonly List<string> _items = new() { "A", "B", "C", "D", "E" };
+
+    void RemoveMiddle() => _items.RemoveAt(_items.Count / 2); // removes "C"
+}
