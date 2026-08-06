@@ -21,6 +21,7 @@ namespace RazorRendererTests
             typeof(KeyedListTests),
             typeof(SharedStyleSheetTests),
             typeof(RazorUIThemeTests),
+            typeof(UiProgressTests),
         };
 
         /// <summary>Milliseconds a test may run before it is reported as timed out. Overridable per test.</summary>

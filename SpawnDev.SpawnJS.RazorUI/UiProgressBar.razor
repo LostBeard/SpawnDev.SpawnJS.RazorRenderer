@@ -1,0 +1,57 @@
+@inherits UiComponentBase
+
+@* Linear progress bar. Determinate (fill width = value fraction), indeterminate (animated sweep), optional
+   striped fill and value label. Accessible: role=progressbar with aria-value min/max/now (now omitted when
+   indeterminate). Styled by base.css via theme tokens. *@
+<div class="@CssClass(RootClass)" style="@Style(null)" @attributes="PassThroughAttributes"
+     role="progressbar" aria-valuemin="@Inv(Min)" aria-valuemax="@Inv(Max)" aria-valuenow="@AriaNow">
+    <div class="ui-progress-track">
+        <div class="ui-progress-fill" style="@FillStyle"></div>
+    </div>
+    @if (ShowValue && !Indeterminate)
+    {
+        <span class="ui-progress-label">@LabelText</span>
+    }
+</div>
+
+@code {
+    /// <summary>Current value (between <see cref="Min"/> and <see cref="Max"/>).</summary>
+    [Parameter] public double Value { get; set; }
+
+    /// <summary>Lower bound of the value range. Default 0.</summary>
+    [Parameter] public double Min { get; set; } = 0;
+
+    /// <summary>Upper bound of the value range. Default 100.</summary>
+    [Parameter] public double Max { get; set; } = 100;
+
+    /// <summary>Show an animated indeterminate sweep instead of a value-driven fill.</summary>
+    [Parameter] public bool Indeterminate { get; set; }
+
+    /// <summary>Overlay a diagonal stripe pattern on the fill.</summary>
+    [Parameter] public bool Striped { get; set; }
+
+    /// <summary>Show a value label (percentage by default) at the end. Ignored when indeterminate.</summary>
+    [Parameter] public bool ShowValue { get; set; }
+
+    /// <summary>Custom label text; when null a rounded percentage is shown.</summary>
+    [Parameter] public string? Label { get; set; }
+
+    double Fraction => Max > Min ? Math.Clamp((Value - Min) / (Max - Min), 0, 1) : 0;
+
+    string RootClass
+    {
+        get
+        {
+            var c = "ui-progress";
+            if (Indeterminate) c += " ui-progress-indeterminate";
+            if (Striped) c += " ui-progress-striped";
+            return c;
+        }
+    }
+
+    string? AriaNow => Indeterminate ? null : Inv(Value);
+    string FillStyle => Indeterminate ? "" : $"width:{Inv(Fraction * 100)}%";
+    string LabelText => Label ?? $"{Math.Round(Fraction * 100)}%";
+
+    static string Inv(double v) => v.ToString(System.Globalization.CultureInfo.InvariantCulture);
+}

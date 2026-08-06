@@ -11,7 +11,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds the <see cref="SpawnDomRenderer"/> singleton - an interactive Blazor renderer that runs in
         /// .NET WASM and applies render batches directly to the DOM via SpawnJS. One renderer hosts many
-        /// root components; mount them with <see cref="SpawnDomRenderer.RenderComponentAsync{TComponent}"/>.
+        /// root components; mount them with <see cref="SpawnDomRenderer"/>'s <c>RenderComponentAsync</c>.
         /// </summary>
         public static IServiceCollection AddRazorRenderer(this IServiceCollection _this)
         {

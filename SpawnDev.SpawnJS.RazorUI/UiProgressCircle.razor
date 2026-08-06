@@ -1,0 +1,59 @@
+@inherits UiComponentBase
+
+@* Circular / donut progress via an inline SVG ring: a track circle and a fill circle whose visible arc is
+   controlled by stroke-dasharray/stroke-dashoffset. Geometry is authored in a fixed 100x100 viewBox and scaled
+   to Size px, so the math is size-independent. Indeterminate spins a fixed 25% arc. Accessible via role=
+   progressbar + aria-value*. *@
+<div class="@CssClass(RootClass)" style="@Style(RootStyle)" @attributes="PassThroughAttributes"
+     role="progressbar" aria-valuemin="@Inv(Min)" aria-valuemax="@Inv(Max)" aria-valuenow="@AriaNow">
+    <svg class="ui-progress-circle-svg" viewBox="0 0 100 100" width="@Inv(Size)" height="@Inv(Size)" aria-hidden="true">
+        <circle class="ui-progress-circle-track" cx="50" cy="50" r="@Inv(Radius)" fill="none" stroke-width="@Inv(StrokeWidth)" />
+        <circle class="ui-progress-circle-fill" cx="50" cy="50" r="@Inv(Radius)" fill="none" stroke-width="@Inv(StrokeWidth)"
+                stroke-linecap="round"
+                stroke-dasharray="@Inv(Circumference)" stroke-dashoffset="@DashOffset"
+                transform="rotate(-90 50 50)" />
+    </svg>
+    @if (ShowValue && !Indeterminate)
+    {
+        <span class="ui-progress-circle-label">@LabelText</span>
+    }
+</div>
+
+@code {
+    /// <summary>Current value (between <see cref="Min"/> and <see cref="Max"/>).</summary>
+    [Parameter] public double Value { get; set; }
+
+    /// <summary>Lower bound of the value range. Default 0.</summary>
+    [Parameter] public double Min { get; set; } = 0;
+
+    /// <summary>Upper bound of the value range. Default 100.</summary>
+    [Parameter] public double Max { get; set; } = 100;
+
+    /// <summary>Rendered diameter in pixels. Default 64.</summary>
+    [Parameter] public double Size { get; set; } = 64;
+
+    /// <summary>Ring thickness in viewBox units (of 100). Default 8.</summary>
+    [Parameter] public double StrokeWidth { get; set; } = 8;
+
+    /// <summary>Spin a fixed arc instead of showing a value-driven ring.</summary>
+    [Parameter] public bool Indeterminate { get; set; }
+
+    /// <summary>Show a centered value label (percentage by default). Ignored when indeterminate.</summary>
+    [Parameter] public bool ShowValue { get; set; }
+
+    /// <summary>Custom center label; when null a rounded percentage is shown.</summary>
+    [Parameter] public string? Label { get; set; }
+
+    double Fraction => Max > Min ? Math.Clamp((Value - Min) / (Max - Min), 0, 1) : 0;
+    double Radius => 50 - StrokeWidth / 2;
+    double Circumference => 2 * Math.PI * Radius;
+
+    string RootClass => Indeterminate ? "ui-progress-circle ui-progress-circle-indeterminate" : "ui-progress-circle";
+    string RootStyle => $"width:{Inv(Size)}px;height:{Inv(Size)}px";
+    string? AriaNow => Indeterminate ? null : Inv(Value);
+    // indeterminate shows a fixed 25% arc (offset = 75% of circumference); determinate reveals by fraction
+    string DashOffset => Inv(Indeterminate ? Circumference * 0.75 : Circumference * (1 - Fraction));
+    string LabelText => Label ?? $"{Math.Round(Fraction * 100)}%";
+
+    static string Inv(double v) => v.ToString(System.Globalization.CultureInfo.InvariantCulture);
+}

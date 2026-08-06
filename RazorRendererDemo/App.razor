@@ -4,31 +4,32 @@
 @inject SpawnJSRuntime JS
 @inject WebWorkerService WebWorkerService
 @inject RazorUITheme ThemeService
-@implements IDisposable
-
-
 
 <div>
-    <h3>App</h3>
-    <button class="test-button-1" @onclick="IncrementCount">Clicked @count times</button>
-    <SomeInfo Name="@name"></SomeInfo>
-    <input class="name-input" @bind="name" @bind:event="oninput" />
-    <button @onclick="RunWorkerTest">Run Worker Test</button>
-    <button @onclick="ToggleVideoPlayer">Toggle Video Player</button>
-    @if (_showVideoPlayer)
-    {
-        <VideoPlayerA />
-    }
-    <KeyedListTest />
+    <h2>RazorUI</h2>
 
     <UiCard Title="RazorUI">
         A themeable component library rendered by SpawnDomRenderer, styled by a stylesheet adopted into this shadow root.
         <UiStack Gap="0.6rem" style="margin-top:.75rem;">
-            <UiInput @bind-Value="name" placeholder="Type here" />
+            <UiInput @bind-Value="_name" placeholder="Type here" />
             <UiStack Horizontal="true" Gap="0.5rem">
-                <UiButton OnClick="IncrementCount" id="primary-btn" data-test="splat" class="demo-extra">Primary (@count)</UiButton>
+                <UiButton OnClick="IncrementCount" id="primary-btn" data-test="splat" class="demo-extra">Primary (@_count)</UiButton>
                 <UiButton Secondary="true" OnClick="ToggleTheme">Toggle theme</UiButton>
                 <UiButton Secondary="true" OnClick="@(() => _dialogOpen = true)">Open dialog</UiButton>
+            </UiStack>
+        </UiStack>
+    </UiCard>
+
+    <UiCard Title="Progress">
+        <UiStack Gap="0.9rem" style="margin-top:.5rem;">
+            <input type="range" min="0" max="100" @bind="_progress" @bind:event="oninput" style="width:100%;" />
+            <UiProgressBar Value="_progress" ShowValue="true" />
+            <UiProgressBar Value="_progress" Striped="true" ShowValue="true" />
+            <UiProgressBar Indeterminate="true" />
+            <UiStack Horizontal="true" Gap="1.4rem" style="align-items:center; margin-top:.25rem;">
+                <UiProgressCircle Value="_progress" ShowValue="true" />
+                <UiProgressCircle Value="_progress" Size="96" StrokeWidth="10" ShowValue="true" />
+                <UiProgressCircle Indeterminate="true" />
             </UiStack>
         </UiStack>
     </UiCard>
@@ -36,43 +37,20 @@
     <UiDialog @bind-Open="_dialogOpen" Title="Hello from RazorUI">
         This dialog is rendered by SpawnDomRenderer and styled by the adopted RazorUI sheet. Click the backdrop to close.
     </UiDialog>
-    <SimpleRedSquare />
 </div>
 
-
 @code {
-    int count = 0;
-    string name = "User first name maybe";
-
-    void IncrementCount() => count++;
-
-    WebWorker? _worker;
-
-    bool _showVideoPlayer = false;
-
-    async Task RunWorkerTest()
-    {
-        _worker ??= await WebWorkerService.GetWebWorker();
-        // the below line will print "Hello from Window" to the console from inside
-        await _worker!.Run(() => Console.WriteLine($"Hello from {JS.GlobalScopeName}"));
-    }
-
-    void ToggleVideoPlayer()
-    {
-        _showVideoPlayer = !_showVideoPlayer;
-    }
-
+    int _count = 0;
+    string _name = "User first name maybe";
+    double _progress = 42;
     bool _dialogOpen;
     bool _dark;
+
+    void IncrementCount() => _count++;
     void ToggleTheme()
     {
         _dark = !_dark;
         // Live theme swap - restyles every root the shared theme sheet was adopted into, no re-render.
         ThemeService.SetTheme(_dark ? RazorUITheme.Dark : RazorUITheme.Light);
-    }
-
-    public void Dispose()
-    {
-        _worker?.Dispose();
     }
 }

@@ -55,3 +55,54 @@
   box-shadow: 0 10px 40px rgba(0,0,0,.3); padding: 1.25rem;
 }
 .ui-dialog-title { margin: 0 0 .5rem; font-weight: 600; font-size: 1.1rem; }
+
+/* ── Progress (linear) ─────────────────────────────────────────────────────── */
+.ui-progress { display: flex; align-items: center; gap: .6rem; width: 100%; }
+.ui-progress-track {
+  position: relative; flex: 1 1 auto; height: .5rem; overflow: hidden;
+  background: var(--ui-progress-track, var(--ui-border, #e2e2ea));
+  border-radius: 999px;
+}
+.ui-progress-fill {
+  height: 100%; width: 0; border-radius: inherit;
+  background: var(--ui-accent, #4f46e5);
+  transition: width .3s ease;
+}
+.ui-progress-label {
+  font: inherit; font-size: .85em; color: var(--ui-muted, #6b7280);
+  min-width: 2.75em; text-align: right; font-variant-numeric: tabular-nums;
+}
+/* striped fill (works determinate; animates when combined with indeterminate) */
+.ui-progress-striped .ui-progress-fill {
+  background-image: linear-gradient(45deg,
+    rgba(255,255,255,.25) 25%, transparent 25%, transparent 50%,
+    rgba(255,255,255,.25) 50%, rgba(255,255,255,.25) 75%, transparent 75%, transparent);
+  background-size: .75rem .75rem;
+}
+/* indeterminate: a sweeping segment */
+.ui-progress-indeterminate .ui-progress-fill {
+  width: 35%; transition: none;
+  animation: ui-progress-sweep 1.15s ease-in-out infinite;
+}
+@keyframes ui-progress-sweep {
+  0%   { margin-left: -35%; }
+  100% { margin-left: 100%; }
+}
+
+/* ── Progress (circular / donut) ──────────────────────────────────────────── */
+.ui-progress-circle { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.ui-progress-circle-svg { display: block; }
+.ui-progress-circle-track { stroke: var(--ui-progress-track, var(--ui-border, #e2e2ea)); }
+.ui-progress-circle-fill {
+  stroke: var(--ui-accent, #4f46e5);
+  transition: stroke-dashoffset .3s ease;
+}
+.ui-progress-circle-label {
+  position: absolute; font: inherit; font-size: .8em; font-weight: 600;
+  color: var(--ui-text, #1a1a1f); font-variant-numeric: tabular-nums;
+}
+.ui-progress-circle-indeterminate .ui-progress-circle-svg {
+  animation: ui-progress-spin 1s linear infinite; transform-origin: 50% 50%;
+}
+.ui-progress-circle-indeterminate .ui-progress-circle-fill { transition: none; }
+@keyframes ui-progress-spin { to { transform: rotate(360deg); } }
