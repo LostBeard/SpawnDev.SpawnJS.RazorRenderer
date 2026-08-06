@@ -1,0 +1,57 @@
+@* Self-contained showcase for the RazorUI data components: a lazy async tree over a fake filesystem and a
+   virtualized list of 1000 rows with async range loading + placeholders. *@
+<UiCard Title="Data">
+    <UiStack Gap="1rem" style="margin-top:.5rem;">
+        <div>
+            <div style="font-weight:600; margin-bottom:.35rem;">UiTree - lazy async folders</div>
+            <UiTree TItem="string" Roots="_roots"
+                    HasChildren="@(s => s.EndsWith('/'))"
+                    LoadChildren="LoadChildren" @bind-Selected="_selectedNode">
+                <ItemTemplate>@Name(context)</ItemTemplate>
+            </UiTree>
+            @if (_selectedNode is not null)
+            {
+                <div style="margin-top:.4rem; color:var(--ui-muted);">Selected: @_selectedNode</div>
+            }
+        </div>
+        <div>
+            <div style="font-weight:600; margin-bottom:.35rem;">UiVirtualList - 1000 rows, windowed + async range load</div>
+            <UiVirtualList TItem="int" TotalCount="1000" RowHeight="28" Height="220" LoadRange="LoadRange"
+                           style="border:1px solid var(--ui-border); border-radius:var(--ui-radius);">
+                <ItemTemplate>
+                    <div style="display:flex; align-items:center; height:100%; padding:0 .6rem;">Row @context</div>
+                </ItemTemplate>
+                <Placeholder>
+                    <div style="display:flex; align-items:center; height:100%; padding:0 .6rem; color:var(--ui-muted);">loading @context…</div>
+                </Placeholder>
+            </UiVirtualList>
+        </div>
+    </UiStack>
+</UiCard>
+
+@code {
+    readonly List<string> _roots = new() { "src/", "assets/", "README.md" };
+    string? _selectedNode;
+
+    async Task<IReadOnlyList<string>> LoadChildren(string path)
+    {
+        await Task.Delay(120); // simulate an async fetch
+        return new List<string> { $"{path}components/", $"{path}app.css", $"{path}index.html" };
+    }
+
+    async Task<IReadOnlyList<int>> LoadRange(int start, int count)
+    {
+        await Task.Delay(60); // simulate an async range fetch
+        var list = new List<int>(count);
+        for (var i = 0; i < count; i++) list.Add(start + i);
+        return list;
+    }
+
+    static string Name(string path)
+    {
+        var trimmed = path.TrimEnd('/');
+        var slash = trimmed.LastIndexOf('/');
+        var name = slash >= 0 ? trimmed[(slash + 1)..] : trimmed;
+        return path.EndsWith('/') ? name + "/" : name;
+    }
+}
