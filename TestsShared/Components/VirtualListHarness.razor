@@ -1,0 +1,17 @@
+@* Test harness: a UiVirtualList<int> over 1000 items with an async range loader. Item value == its index,
+   so a rendered row's data-index tells us exactly which window loaded. *@
+<UiVirtualList TItem="int" TotalCount="1000" RowHeight="20" Height="200" LoadRange="Load">
+    <ItemTemplate>
+        <div class="vrow" data-index="@context">Item @context</div>
+    </ItemTemplate>
+</UiVirtualList>
+
+@code {
+    async Task<IReadOnlyList<int>> Load(int start, int count)
+    {
+        await Task.Yield();
+        var list = new List<int>(count);
+        for (var i = 0; i < count; i++) list.Add(start + i);
+        return list;
+    }
+}

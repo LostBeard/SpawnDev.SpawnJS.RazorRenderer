@@ -160,3 +160,11 @@
   font: inherit; font-variant-numeric: tabular-nums;
   color: var(--ui-muted, #6b7280); white-space: nowrap;
 }
+
+/* ── Virtual list ─────────────────────────────────────────────────────────── */
+/* structural overflow/position are set inline by the component; base.css adds only cosmetics */
+.ui-virtual-list {
+  overscroll-behavior: contain;
+  background: var(--ui-surface, #fff); color: var(--ui-text, #1a1a1f);
+}
+.ui-virtual-list-row { box-sizing: border-box; }

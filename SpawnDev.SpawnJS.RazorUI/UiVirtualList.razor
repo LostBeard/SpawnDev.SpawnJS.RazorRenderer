@@ -1,0 +1,126 @@
+@inherits UiComponentBase
+@typeparam TItem
+@inject SpawnDomRenderer Renderer
+
+@* Windowed virtual list: only the rows in (and near) the viewport are rendered, out of TotalCount, so a list
+   of thousands costs a handful of DOM nodes. A fixed RowHeight gives the total scroll extent (a sizer of
+   TotalCount*RowHeight) and each visible row is absolutely positioned at index*RowHeight. Data arrives by
+   window through the async LoadRange(start,count) callback (Radzen LoadData-style) - unloaded rows show the
+   Placeholder. Rows are @key'd by index so the renderer keeps 1:1 element identity as the window shifts. *@
+<div class="@CssClass("ui-virtual-list")" style="@Style(RootStyle)" @ref="_scrollRef" @onscroll="OnScrollAsync" @attributes="PassThroughAttributes">
+    <div class="ui-virtual-list-sizer" style="@SizerStyle">
+        @for (var i = _first; i < _last; i++)
+        {
+            var index = i;
+            <div class="ui-virtual-list-row" @key="index" style="@RowStyle(index)">
+                @if (_cache.TryGetValue(index, out var item))
+                {
+                    @ItemTemplate(item)
+                }
+                else
+                {
+                    @Placeholder?.Invoke(index)
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>Total number of items in the (virtual) list.</summary>
+    [Parameter] public int TotalCount { get; set; }
+
+    /// <summary>Fixed row height in pixels. Default 32.</summary>
+    [Parameter] public double RowHeight { get; set; } = 32;
+
+    /// <summary>Viewport height in pixels. Default 320.</summary>
+    [Parameter] public double Height { get; set; } = 320;
+
+    /// <summary>Extra rows rendered above and below the viewport to smooth scrolling. Default 4.</summary>
+    [Parameter] public int Overscan { get; set; } = 4;
+
+    /// <summary>Renders a loaded item.</summary>
+    [Parameter] public RenderFragment<TItem> ItemTemplate { get; set; } = default!;
+
+    /// <summary>Renders a not-yet-loaded row (by index). Optional.</summary>
+    [Parameter] public RenderFragment<int>? Placeholder { get; set; }
+
+    /// <summary>Async range loader: returns the items for [start, start+count). The Radzen LoadData pattern.</summary>
+    [Parameter] public Func<int, int, Task<IReadOnlyList<TItem>>>? LoadRange { get; set; }
+
+    /// <summary>In-memory items (alternative to <see cref="LoadRange"/> when the whole set is already available).</summary>
+    [Parameter] public IReadOnlyList<TItem>? Items { get; set; }
+
+    ElementReference _scrollRef;
+    bool _initialized;
+    int _first, _last;
+    readonly Dictionary<int, TItem> _cache = new();
+    readonly HashSet<int> _requested = new();
+
+    protected override void OnParametersSet()
+    {
+        // Provisional top window for the first render; after init the window is driven by scrolling only,
+        // so a parent re-render never jumps us back to the top.
+        if (!_initialized) UpdateWindow(0, (int)Height);
+        else { _first = Math.Clamp(_first, 0, TotalCount); _last = Math.Clamp(_last, 0, TotalCount); }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _initialized = true;
+        // Read the real viewport size and load the initial window.
+        using var el = Renderer.GetElement<HTMLElement>(_scrollRef);
+        UpdateWindow(el?.ScrollTop ?? 0, el?.ClientHeight ?? (int)Height);
+        if (await EnsureLoadedAsync()) StateHasChanged();
+    }
+
+    async Task OnScrollAsync()
+    {
+        using var el = Renderer.GetElement<HTMLElement>(_scrollRef);
+        if (el is null) return;
+        UpdateWindow(el.ScrollTop, el.ClientHeight);
+        StateHasChanged();            // reposition the window immediately (placeholders for any unloaded rows)
+        if (await EnsureLoadedAsync()) StateHasChanged();   // then fill in loaded items
+    }
+
+    void UpdateWindow(int scrollTop, int clientHeight)
+    {
+        if (RowHeight <= 0 || TotalCount <= 0) { _first = _last = 0; return; }
+        var first = (int)Math.Floor(scrollTop / RowHeight) - Overscan;
+        var visible = (int)Math.Ceiling(clientHeight / RowHeight) + Overscan * 2;
+        _first = Math.Clamp(first, 0, TotalCount);
+        _last = Math.Clamp(Math.Max(first, 0) + visible, 0, TotalCount);
+    }
+
+    // Loads any missing rows in the current window. Returns true if new data was cached.
+    async Task<bool> EnsureLoadedAsync()
+    {
+        if (Items is not null)
+        {
+            var added = false;
+            for (var i = _first; i < _last; i++)
+                if (i >= 0 && i < Items.Count && !_cache.ContainsKey(i)) { _cache[i] = Items[i]; added = true; }
+            return added;
+        }
+        if (LoadRange is null) return false;
+        var missing = new List<int>();
+        for (var i = _first; i < _last; i++)
+            if (!_cache.ContainsKey(i) && !_requested.Contains(i)) missing.Add(i);
+        if (missing.Count == 0) return false;
+        var start = missing[0];
+        var count = missing[^1] - start + 1;
+        for (var i = start; i < start + count; i++) _requested.Add(i);
+        var loaded = await LoadRange(start, count);
+        for (var k = 0; k < loaded.Count; k++) _cache[start + k] = loaded[k];
+        return loaded.Count > 0;
+    }
+
+    // overflow + position are structural (the component can't virtualize without them), so they are inline
+    // rather than in base.css - the list works whether or not the theme stylesheet is loaded.
+    string RootStyle => $"height:{Inv(Height)}px;overflow-y:auto;position:relative";
+    string SizerStyle => $"position:relative;height:{Inv(TotalCount * RowHeight)}px";
+    string RowStyle(int index) => $"position:absolute;left:0;right:0;top:{Inv(index * RowHeight)}px;height:{Inv(RowHeight)}px";
+
+    static string Inv(double v) => v.ToString(System.Globalization.CultureInfo.InvariantCulture);
+}

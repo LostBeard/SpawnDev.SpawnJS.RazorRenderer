@@ -57,6 +57,7 @@ the UI foundation for most future SpawnJS apps.
 | Media/Icons | `UiIcon` (inline-SVG set: play/pause/stop/skip/volume/fullscreen) | ✅ done | ✅ shared with UiIconButton | ✅ media preview |
 | Media/Icons | `UiIconButton` (circular ghost button, Icon/ChildContent, OnClick, aria-label) | ✅ done | ✅ 3 tests (icon shape, label, click) | ✅ media preview |
 | Media | `UiTime` (mm:ss / hh:mm:ss position/duration label) | ✅ done | ✅ 2 tests (mm:ss, hh:mm:ss) | ⬜ |
+| **Data** | **`UiVirtualList<T>` (windowed virtualization + async `LoadRange` + `@key` rows)** | ✅ done | ✅ 2 tests (virtualizes; scroll loads new window) | ⬜ |
 
 Legend: ✅ done · 🔜 in progress/next · ⬜ backlog
 
