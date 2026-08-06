@@ -1,0 +1,14 @@
+@inherits UiComponentBase
+
+<div class="@CssClass(Horizontal ? "ui-stack ui-stack-h" : "ui-stack")" style="@Style($"gap:{Gap}")" @attributes="PassThroughAttributes">@ChildContent</div>
+
+@code {
+    /// <summary>Stacked content.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Lay children out in a row instead of a column.</summary>
+    [Parameter] public bool Horizontal { get; set; }
+
+    /// <summary>Gap between children (any CSS length).</summary>
+    [Parameter] public string Gap { get; set; } = "0.5rem";
+}

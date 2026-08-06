@@ -1,0 +1,17 @@
+@inherits UiComponentBase
+
+<div class="@CssClass("ui-card")" style="@Style(null)" @attributes="PassThroughAttributes">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <div class="ui-card-title">@Title</div>
+    }
+    <div class="ui-card-body">@ChildContent</div>
+</div>
+
+@code {
+    /// <summary>Optional card title, rendered above the body.</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Card body content.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

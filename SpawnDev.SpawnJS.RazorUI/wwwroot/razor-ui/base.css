@@ -1,0 +1,57 @@
+/* RazorUI component styles. Authored against theme CSS custom properties (var(--ui-*)); every value
+   falls back to a sensible default so components are usable even with no theme loaded. Loaded via code
+   (SpawnDomRenderer.AttachStyleSheet) into each shadow root - never linked from the host page. */
+
+.ui-button {
+  font: inherit;
+  line-height: 1.2;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--ui-radius, 8px);
+  background: var(--ui-accent, #4f46e5);
+  color: var(--ui-on-accent, #fff);
+  cursor: pointer;
+  transition: filter .15s ease, background .15s ease;
+}
+.ui-button:hover { filter: brightness(1.08); }
+.ui-button:active { filter: brightness(0.93); }
+.ui-button.ui-secondary {
+  background: var(--ui-surface, #fff);
+  color: var(--ui-text, #1a1a1f);
+  border-color: var(--ui-border, #d0d0d8);
+}
+
+.ui-card {
+  display: block;
+  background: var(--ui-surface, #fff);
+  color: var(--ui-text, #1a1a1f);
+  border: 1px solid var(--ui-border, #e2e2ea);
+  border-radius: var(--ui-radius, 12px);
+  box-shadow: var(--ui-shadow, 0 1px 3px rgba(0,0,0,.1));
+  padding: 1rem;
+}
+.ui-card-title { margin: 0 0 .5rem; font-weight: 600; }
+.ui-card-body { color: var(--ui-text, #1a1a1f); }
+
+.ui-input {
+  font: inherit;
+  padding: .45rem .6rem;
+  border: 1px solid var(--ui-border, #d0d0d8);
+  border-radius: var(--ui-radius, 8px);
+  background: var(--ui-surface, #fff);
+  color: var(--ui-text, #1a1a1f);
+}
+.ui-input:focus { outline: 2px solid var(--ui-accent, #4f46e5); outline-offset: 1px; }
+
+.ui-stack { display: flex; flex-direction: column; }
+.ui-stack.ui-stack-h { flex-direction: row; align-items: center; }
+
+.ui-dialog-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1000; }
+.ui-dialog {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 1001; min-width: 280px; max-width: 90vw;
+  background: var(--ui-surface, #fff); color: var(--ui-text, #1a1a1f);
+  border: 1px solid var(--ui-border, #e2e2ea); border-radius: var(--ui-radius, 12px);
+  box-shadow: 0 10px 40px rgba(0,0,0,.3); padding: 1.25rem;
+}
+.ui-dialog-title { margin: 0 0 .5rem; font-weight: 600; font-size: 1.1rem; }

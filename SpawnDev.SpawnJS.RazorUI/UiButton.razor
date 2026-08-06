@@ -1,0 +1,16 @@
+@inherits UiComponentBase
+
+<button class="@CssClass(Secondary ? "ui-button ui-secondary" : "ui-button")" style="@Style(null)" @attributes="PassThroughAttributes" @onclick="OnClickAsync">@ChildContent</button>
+
+@code {
+    /// <summary>Button label / content.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Render the secondary (surface) variant instead of the accent-filled default.</summary>
+    [Parameter] public bool Secondary { get; set; }
+
+    /// <summary>Invoked when the button is clicked.</summary>
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    async Task OnClickAsync() => await OnClick.InvokeAsync();
+}

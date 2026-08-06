@@ -15,6 +15,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\SpawnDev.SpawnJS.RazorRenderer\SpawnDev.SpawnJS.RazorRenderer.csproj" />
+		<ProjectReference Include="..\SpawnDev.SpawnJS.RazorUI\SpawnDev.SpawnJS.RazorUI.csproj" />
 	</ItemGroup>
 
 </Project>

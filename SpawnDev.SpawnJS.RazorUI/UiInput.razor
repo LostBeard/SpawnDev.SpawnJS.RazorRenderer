@@ -1,0 +1,17 @@
+@inherits UiComponentBase
+
+<input class="@CssClass("ui-input")" style="@Style(null)" value="@Value" @oninput="OnInput" @attributes="PassThroughAttributes" />
+
+@code {
+    /// <summary>The current text value. Supports <c>@bind-Value</c>.</summary>
+    [Parameter] public string? Value { get; set; }
+
+    /// <summary>Raised as the user types (paired with <see cref="Value"/> for two-way binding).</summary>
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    async Task OnInput(ChangeEventArgs e)
+    {
+        Value = e.Value as string;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

@@ -1,0 +1,31 @@
+@inherits UiComponentBase
+
+@if (Open)
+{
+    @* Backdrop and dialog are SIBLINGS (not nested), so a click on the dialog does not bubble to the backdrop -
+       no @onclick:stopPropagation modifier needed. Backdrop sits below the dialog via z-index. *@
+    <div class="ui-dialog-backdrop" @onclick="CloseAsync"></div>
+    <div class="@CssClass("ui-dialog")" style="@Style(null)" @attributes="PassThroughAttributes">
+        @if (!string.IsNullOrEmpty(Title))
+        {
+            <div class="ui-dialog-title">@Title</div>
+        }
+        <div class="ui-dialog-body">@ChildContent</div>
+    </div>
+}
+
+@code {
+    /// <summary>Whether the dialog is shown. Supports <c>@bind-Open</c>.</summary>
+    [Parameter] public bool Open { get; set; }
+
+    /// <summary>Raised when the dialog requests to close (backdrop click).</summary>
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    /// <summary>Optional dialog title.</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Dialog body content.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    async Task CloseAsync() => await OpenChanged.InvokeAsync(false);
+}

@@ -4,6 +4,7 @@ using SpawnDev;
 using SpawnDev.SpawnJS;
 using SpawnDev.SpawnJS.JSObjects;
 using SpawnDev.SpawnJS.RazorRenderer;
+using SpawnDev.SpawnJS.RazorUI;
 using SpawnDev.SpawnJS.WebWorkers;
 
 // .Net Wasm, unlike Blazor, does not come with a built-in dependency injection container.
@@ -20,6 +21,9 @@ builder.Services.AddWebWorkerService();
 
 // register the interactive Razor renderer (SpawnDomRenderer singleton)
 builder.Services.AddRazorRenderer();
+
+// register RazorUI (themeable component library on top of the renderer)
+builder.Services.AddRazorUI();
 
 // Additional services
 builder.Services.AddSingleton<TestService>();
@@ -46,6 +50,12 @@ await builder.Build().SpawnJSRunAsync(async (app) =>
             document.Body!.Append(host);
             var shadow = host.AttachShadow(new AttachShadowRootOptions { Mode = "open" });
             await renderer.RenderComponentAsync<App>(shadow);
+            // Adopt RazorUI's component + theme stylesheets INTO the shadow root, so RazorUI components are
+            // styled inside the boundary a host-page <link> cannot cross.
+            app.Services.GetRequiredService<RazorUITheme>().ApplyTo(shadow);
+            // Self-load the app's OWN scoped-CSS bundle ({App}.styles.css) INTO the shadow root, so
+            // component-scoped .razor.css applies inside the boundary - via code, no host-page <link>.
+            renderer.AttachStyleSheet(shadow, $"{JS.AppBaseUri}RazorRendererDemo.styles.css");
         }
         else
         {

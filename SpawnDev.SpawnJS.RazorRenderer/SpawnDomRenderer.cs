@@ -117,6 +117,96 @@ public sealed class SpawnDomRenderer : Renderer
          : _refCaptures.TryGetValue(reference.Id, out var le) ? le.Node
          : null;
 
+    // ───────────────────────────────────────────────────── stylesheets ──
+
+    // adoptedStyleSheets is a read-only property whose value is a mutable ObservableArray - you PUSH a sheet
+    // into it, you do not reassign it (that is why the SpawnJS wrappers expose it get-only). ShadowRoot and
+    // Document each carry it (the DocumentOrShadowRoot mixin), so these are typed overloads rather than one
+    // Node method - no reaching around the wrappers.
+
+    /// <summary>
+    /// Creates a constructable stylesheet from <paramref name="css"/> and adopts it into a shadow root, so
+    /// its rules apply INSIDE that root - the only way to style a component mounted in a shadow root, since a
+    /// host-page <c>&lt;link&gt;</c>/<c>&lt;style&gt;</c> cannot cross the boundary.
+    /// <para>The returned sheet is shareable: adopt the SAME sheet into many roots and a later
+    /// <see cref="CSSStyleSheet.ReplaceSync"/> updates every one at once (live theme switching). Caller owns it.</para>
+    /// </summary>
+    public CSSStyleSheet AdoptStyleSheet(ShadowRoot root, string css)
+    {
+        var sheet = MakeStyleSheet(css);
+        AdoptStyleSheet(root, sheet);
+        return sheet;
+    }
+
+    /// <summary>Adopts an existing (possibly shared) <paramref name="sheet"/> into a shadow root.</summary>
+    public void AdoptStyleSheet(ShadowRoot root, CSSStyleSheet sheet)
+    {
+        using var adopted = root.AdoptedStyleSheets;
+        adopted.Push(sheet);
+    }
+
+    /// <summary>
+    /// Creates a constructable stylesheet from <paramref name="css"/> and adopts it into a document (the
+    /// light-DOM equivalent - applies to everything the document renders). Returns the shareable sheet.
+    /// </summary>
+    public CSSStyleSheet AdoptStyleSheet(Document root, string css)
+    {
+        var sheet = MakeStyleSheet(css);
+        AdoptStyleSheet(root, sheet);
+        return sheet;
+    }
+
+    /// <summary>Adopts an existing (possibly shared) <paramref name="sheet"/> into a document.</summary>
+    public void AdoptStyleSheet(Document root, CSSStyleSheet sheet)
+    {
+        using var adopted = root.AdoptedStyleSheets;
+        adopted.Push(sheet);
+    }
+
+    static CSSStyleSheet MakeStyleSheet(string css)
+    {
+        var sheet = new CSSStyleSheet();
+        sheet.ReplaceSync(css);
+        return sheet;
+    }
+
+    // Link-based alternative to AdoptStyleSheet: loads a stylesheet BY URL through code (no page edit needed).
+    // A <link> appended INTO a shadow root loads and scopes to that root; appended to the document head it
+    // covers the light DOM. This is how an app self-loads all its CSS - its own, a theme file, or the
+    // build's auto-generated {App}.styles.css scoped bundle - with only the app script on the page.
+
+    /// <summary>
+    /// Creates a <c>&lt;link rel="stylesheet"&gt;</c> for <paramref name="href"/> and appends it INTO
+    /// <paramref name="root"/>, so the sheet loads and applies inside that shadow root. Returns the link
+    /// element - change its <c>href</c> later (e.g. to swap a theme) or remove it to unload the sheet.
+    /// </summary>
+    public Element AttachStyleSheet(ShadowRoot root, string href)
+    {
+        var link = CreateStyleLink(href);
+        root.AppendChild(link);
+        return link;
+    }
+
+    /// <summary>
+    /// Creates a <c>&lt;link rel="stylesheet"&gt;</c> for <paramref name="href"/> and appends it to the
+    /// document head (the light-DOM equivalent). Returns the link element.
+    /// </summary>
+    public Element AttachStyleSheet(Document document, string href)
+    {
+        var link = CreateStyleLink(href);
+        using var head = document.Head!;
+        head.AppendChild(link);
+        return link;
+    }
+
+    Element CreateStyleLink(string href)
+    {
+        var link = _document.CreateElement("link");
+        link.SetAttribute("rel", "stylesheet");
+        link.SetAttribute("href", href);
+        return link;
+    }
+
     // ─────────────────────────────────────────────────── batch handling ──
 
     /// <inheritdoc/>

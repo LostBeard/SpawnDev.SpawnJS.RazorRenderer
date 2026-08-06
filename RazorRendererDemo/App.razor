@@ -3,11 +3,13 @@
 @using SpawnDev.SpawnJS.WebWorkers
 @inject SpawnJSRuntime JS
 @inject WebWorkerService WebWorkerService
+@inject RazorUITheme ThemeService
 @implements IDisposable
 
-<h3>App</h3>
+
 
 <div>
+    <h3>App</h3>
     <button class="test-button-1" @onclick="IncrementCount">Clicked @count times</button>
     <SomeInfo Name="@name"></SomeInfo>
     <input class="name-input" @bind="name" @bind:event="oninput" />
@@ -18,6 +20,22 @@
         <VideoPlayerA />
     }
     <KeyedListTest />
+
+    <UiCard Title="RazorUI">
+        A themeable component library rendered by SpawnDomRenderer, styled by a stylesheet adopted into this shadow root.
+        <UiStack Gap="0.6rem" style="margin-top:.75rem;">
+            <UiInput @bind-Value="name" placeholder="Type here" />
+            <UiStack Horizontal="true" Gap="0.5rem">
+                <UiButton OnClick="IncrementCount" id="primary-btn" data-test="splat" class="demo-extra">Primary (@count)</UiButton>
+                <UiButton Secondary="true" OnClick="ToggleTheme">Toggle theme</UiButton>
+                <UiButton Secondary="true" OnClick="@(() => _dialogOpen = true)">Open dialog</UiButton>
+            </UiStack>
+        </UiStack>
+    </UiCard>
+
+    <UiDialog @bind-Open="_dialogOpen" Title="Hello from RazorUI">
+        This dialog is rendered by SpawnDomRenderer and styled by the adopted RazorUI sheet. Click the backdrop to close.
+    </UiDialog>
 </div>
 
 
@@ -35,13 +53,21 @@
     {
         _worker ??= await WebWorkerService.GetWebWorker();
         // the below line will print "Hello from Window" to the console from inside
-        // the created worker, then the worker will be terminated when disposed via the `using` operator
         await _worker!.Run(() => Console.WriteLine($"Hello from {JS.GlobalScopeName}"));
     }
 
     void ToggleVideoPlayer()
     {
         _showVideoPlayer = !_showVideoPlayer;
+    }
+
+    bool _dialogOpen;
+    bool _dark;
+    void ToggleTheme()
+    {
+        _dark = !_dark;
+        // Live theme swap - restyles every root the shared theme sheet was adopted into, no re-render.
+        ThemeService.SetTheme(_dark ? RazorUITheme.Dark : RazorUITheme.Light);
     }
 
     public void Dispose()
