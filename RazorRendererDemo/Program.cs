@@ -2,6 +2,7 @@ using RazorRendererDemo;
 using RazorRendererDemo.Services;
 using SpawnDev;
 using SpawnDev.SpawnJS;
+using SpawnDev.SpawnJS.JSObjects;
 using SpawnDev.SpawnJS.RazorRenderer;
 using SpawnDev.SpawnJS.RazorUI;
 using SpawnDev.SpawnJS.WebWorkers;
@@ -9,11 +10,21 @@ using SpawnDev.SpawnJS.WebWorkers;
 // SpawnJSApp is a very minimal DI container that can be used when not using something else.
 var builder = SpawnJSAppBuilder.CreateDefault(args, out var JS);
 
+var isBrowserExtensionContentScript = JS.GlobalScope == GlobalScope.Window && JS.AppBaseUri.StartsWith("chrome-extension://");
+
 // Adds auto-generated App style sheet and auto-generated RCL stylesheet (fingerprinting and compression disabled)
 builder.RootComponents.AddSharedStyleSheet("RazorRendererDemo.styles.css");
 
-// Add root components
-builder.RootComponents.Add<App>();
+if (isBrowserExtensionContentScript)
+{
+    // 
+    builder.RootComponents.Add<AppTray>(new AttachShadowRootOptions { Mode = "open" }).SetHostStyle("position: fixed; top: 0; left: 50%;");
+}
+else
+{
+    // Add root components
+    builder.RootComponents.Add<App>(new AttachShadowRootOptions { Mode = "open" });
+}
 
 // register WebWorkerService
 builder.Services.AddWebWorkerService();
