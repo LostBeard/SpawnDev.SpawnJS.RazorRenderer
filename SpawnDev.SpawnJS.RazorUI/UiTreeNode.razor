@@ -1,0 +1,90 @@
+@inherits UiComponentBase
+@typeparam TItem
+
+@* One tree node, rendered recursively. Shows an expand toggle when the item HasChildren; expanding lazily
+   LoadChildren (once) and renders them as nested UiTreeNodes. Clicking the row selects; double-clicking
+   activates. Indentation is inline (depth-based) so it works without base.css. *@
+<li class="ui-tree-node" role="treeitem" aria-expanded="@ExpandedAttr">
+    <div class="@RowClass" style="@RowStyle" @onclick="OnRowClickAsync" @ondblclick="OnRowDblClickAsync">
+        @if (Expandable)
+        {
+            <span class="ui-tree-toggle @(_expanded ? "ui-tree-toggle-open" : null)" @onclick="ToggleAsync">
+                <UiIcon Name="chevron-right" Size="16" />
+            </span>
+        }
+        else
+        {
+            <span class="ui-tree-toggle ui-tree-toggle-empty"></span>
+        }
+        <span class="ui-tree-label">@ItemTemplate(Item)</span>
+    </div>
+    @if (_expanded && _children is not null)
+    {
+        <ul class="ui-tree-children" role="group">
+            @foreach (var child in _children)
+            {
+                <UiTreeNode TItem="TItem" Item="child" Depth="Depth + 1"
+                            HasChildren="HasChildren" LoadChildren="LoadChildren" ItemTemplate="ItemTemplate"
+                            Selected="Selected" OnSelect="OnSelect" OnActivate="OnActivate" />
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    /// <summary>This node's item.</summary>
+    [Parameter] public TItem Item { get; set; } = default!;
+
+    /// <summary>Nesting depth (0 = root), used for indentation.</summary>
+    [Parameter] public int Depth { get; set; }
+
+    /// <summary>Whether a node is expandable.</summary>
+    [Parameter] public Func<TItem, bool>? HasChildren { get; set; }
+
+    /// <summary>Async children loader.</summary>
+    [Parameter] public Func<TItem, Task<IReadOnlyList<TItem>>>? LoadChildren { get; set; }
+
+    /// <summary>Node label/content template.</summary>
+    [Parameter] public RenderFragment<TItem> ItemTemplate { get; set; } = default!;
+
+    /// <summary>The tree's selected item (for highlight).</summary>
+    [Parameter] public TItem? Selected { get; set; }
+
+    /// <summary>Invoked to select this node.</summary>
+    [Parameter] public EventCallback<TItem> OnSelect { get; set; }
+
+    /// <summary>Invoked to activate (open) a node.</summary>
+    [Parameter] public EventCallback<TItem> OnActivate { get; set; }
+
+    bool _expanded;
+    bool _loading;
+    IReadOnlyList<TItem>? _children;
+
+    bool Expandable => HasChildren?.Invoke(Item) ?? false;
+    bool IsSelected => EqualityComparer<TItem>.Default.Equals(Item, Selected!);
+    string? ExpandedAttr => Expandable ? (_expanded ? "true" : "false") : null;
+    string RowClass => IsSelected ? "ui-tree-row ui-tree-row-selected" : "ui-tree-row";
+    string RowStyle => $"padding-left:{Inv(Depth * 1.1 + 0.25)}rem";
+
+    async Task ToggleAsync()
+    {
+        if (!Expandable) return;
+        _expanded = !_expanded;
+        if (_expanded && _children is null && !_loading && LoadChildren is not null)
+        {
+            _loading = true;
+            _children = await LoadChildren(Item);
+            _loading = false;
+        }
+    }
+
+    async Task OnRowClickAsync() => await OnSelect.InvokeAsync(Item);
+
+    async Task OnRowDblClickAsync()
+    {
+        await OnActivate.InvokeAsync(Item);
+        if (Expandable) await ToggleAsync();
+    }
+
+    static string Inv(double v) => v.ToString(System.Globalization.CultureInfo.InvariantCulture);
+}

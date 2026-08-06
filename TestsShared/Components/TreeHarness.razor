@@ -1,0 +1,20 @@
+@* Test harness: a UiTree<string> over a tiny fake filesystem. "Folder *" items are expandable and load two
+   children asynchronously; a rendered node stamps data-node with its value for assertions. *@
+<UiTree TItem="string" Roots="_roots"
+        HasChildren="@(s => s.StartsWith("Folder", StringComparison.Ordinal))"
+        LoadChildren="Load" @bind-Selected="_selected">
+    <ItemTemplate>
+        <span data-node="@context">@context</span>
+    </ItemTemplate>
+</UiTree>
+
+@code {
+    readonly List<string> _roots = new() { "Folder A", "Folder B", "file1.txt" };
+    string? _selected;
+
+    async Task<IReadOnlyList<string>> Load(string item)
+    {
+        await Task.Yield();
+        return new List<string> { $"{item}/child1.txt", $"{item}/child2.txt" };
+    }
+}

@@ -1,0 +1,47 @@
+@inherits UiComponentBase
+@typeparam TItem
+
+@* A hierarchical tree with lazy, async children - the file-browser backbone. It owns selection and passes the
+   shared callbacks down to each recursive UiTreeNode. HasChildren decides which nodes get an expand toggle;
+   LoadChildren fetches a node's children on first expand (cached per node). @bind-Selected for selection,
+   OnActivate for open (double-click). *@
+<ul class="@CssClass("ui-tree")" style="@Style(null)" role="tree" @attributes="PassThroughAttributes">
+    @if (Roots is not null)
+    {
+        foreach (var root in Roots)
+        {
+            <UiTreeNode TItem="TItem" Item="root" Depth="0"
+                        HasChildren="HasChildren" LoadChildren="LoadChildren" ItemTemplate="ItemTemplate"
+                        Selected="Selected" OnSelect="SelectAsync" OnActivate="OnActivate" />
+        }
+    }
+</ul>
+
+@code {
+    /// <summary>Top-level items.</summary>
+    [Parameter] public IReadOnlyList<TItem>? Roots { get; set; }
+
+    /// <summary>Whether a node is expandable (e.g. is a folder). No toggle is shown when false/unset.</summary>
+    [Parameter] public Func<TItem, bool>? HasChildren { get; set; }
+
+    /// <summary>Async loader for a node's children, called once on first expand.</summary>
+    [Parameter] public Func<TItem, Task<IReadOnlyList<TItem>>>? LoadChildren { get; set; }
+
+    /// <summary>Renders a node's label/content.</summary>
+    [Parameter] public RenderFragment<TItem> ItemTemplate { get; set; } = default!;
+
+    /// <summary>The selected item. Supports <c>@bind-Selected</c>.</summary>
+    [Parameter] public TItem? Selected { get; set; }
+
+    /// <summary>Raised when selection changes (paired with <see cref="Selected"/>).</summary>
+    [Parameter] public EventCallback<TItem> SelectedChanged { get; set; }
+
+    /// <summary>Raised when a node is activated (double-clicked) - e.g. open a file.</summary>
+    [Parameter] public EventCallback<TItem> OnActivate { get; set; }
+
+    async Task SelectAsync(TItem item)
+    {
+        Selected = item;
+        await SelectedChanged.InvokeAsync(item);
+    }
+}

@@ -58,6 +58,7 @@ the UI foundation for most future SpawnJS apps.
 | Media/Icons | `UiIconButton` (circular ghost button, Icon/ChildContent, OnClick, aria-label) | ✅ done | ✅ 3 tests (icon shape, label, click) | ✅ media preview |
 | Media | `UiTime` (mm:ss / hh:mm:ss position/duration label) | ✅ done | ✅ 2 tests (mm:ss, hh:mm:ss) | ⬜ |
 | **Data** | **`UiVirtualList<T>` (windowed virtualization + async `LoadRange` + `@key` rows)** | ✅ done | ✅ 2 tests (virtualizes; scroll loads new window) | ⬜ |
+| **Data** | **`UiTree<T>` / `UiTreeNode<T>` (recursive, lazy async children, selection, activate)** | ✅ done | ✅ 3 tests (lazy roots; expand loads; select) | ⬜ |
 
 Legend: ✅ done · 🔜 in progress/next · ⬜ backlog
 

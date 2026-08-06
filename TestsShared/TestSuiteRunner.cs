@@ -26,6 +26,7 @@ namespace RazorRendererTests
             typeof(UiIconTests),
             typeof(UiTimeTests),
             typeof(UiVirtualListTests),
+            typeof(UiTreeTests),
         };
 
         /// <summary>Milliseconds a test may run before it is reported as timed out. Overridable per test.</summary>
