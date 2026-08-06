@@ -10,7 +10,7 @@ namespace RazorRendererDemo.Services
 
         async Task InitAsync()
         {
-            Console.WriteLine($"TestService.InitAsync() {JS.GlobalScopeName}");
+            Console.WriteLine($"TestService.InitAsync() {AppDomain.CurrentDomain.FriendlyName} {JS.GlobalScopeName} {JS.AppBaseUri}");
         }
     }
 }

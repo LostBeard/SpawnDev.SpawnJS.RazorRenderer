@@ -16,6 +16,13 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         public static IServiceCollection AddRazorRenderer(this IServiceCollection _this)
         {
             _this.TryAddSingleton<SpawnDomRenderer>();
+            var existing = _this.FirstOrDefault(o => o.ServiceType == typeof(SpawnJSRootComponentMappingCollection));
+            var ret = existing?.ImplementationInstance as SpawnJSRootComponentMappingCollection;
+            if (ret == null)
+            {
+                var newRet = new SpawnJSRootComponentMappingCollection();
+                _this.AddSingleton<SpawnJSRootComponentMappingCollection>(newRet);
+            }
             return _this;
         }
     }

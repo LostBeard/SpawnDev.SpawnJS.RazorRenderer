@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SpawnDev.SpawnJS;
 using SpawnDev.SpawnJS.JSObjects;
+using System.ComponentModel;
 using IComponent = Microsoft.AspNetCore.Components.IComponent;
 
 namespace SpawnDev.SpawnJS.RazorRenderer;
@@ -15,13 +15,30 @@ namespace SpawnDev.SpawnJS.RazorRenderer;
 /// This is a faithful C# port of Blazor's <c>BrowserRenderer</c>/<c>LogicalElements</c> (the code that
 /// normally lives in <c>Web.JS</c> and consumes the render batch on the JS side). Here the batch never
 /// leaves .NET: the same edit stream is walked in C# and every mutation is a typed SpawnJS DOM call.
-/// Real <c>@onclick</c>, <c>@bind</c>, <see cref="StateHasChanged"/>, component lifecycle and event
+/// Real <c>@onclick</c>, <c>@bind</c>, <c>StateHasChanged</c>, component lifecycle and event
 /// callbacks all work - the component model is genuine Blazor, only the renderer is ours.
 /// </para>
-/// <para>Registered as a DI singleton (see <c>AddRazorRenderer</c>); one renderer hosts many root components.</para>
+/// <para>
+/// Registered as a DI singleton by <c>AddRazorRenderer()</c>; one renderer hosts many root components. As an
+/// <see cref="IAsyncBackgroundService"/>, when it starts in a <see cref="GlobalScope.Window"/> scope it renders
+/// every registered <see cref="SpawnJSRootComponentMapping"/> (from <c>SpawnJSAppBuilder.RootComponents</c>) into
+/// its target - an existing element, a selector, a new element, or a shadow root - so a component tree mounts at
+/// startup much like Blazor's <c>WebAssemblyHostBuilder.RootComponents</c>.
+/// </para>
+/// <para>
+/// It also owns the app's <see cref="SharedStyleSheet"/>s: sheets registered here (or via
+/// <c>RootComponents.AddSharedStyleSheet</c>) are attached as <c>&lt;link&gt;</c> elements into the document (for
+/// light-DOM roots) and into each shadow root (which do not inherit document styles), and are repointed or removed
+/// live as the sheet changes.
+/// </para>
 /// </summary>
-public sealed class SpawnDomRenderer : Renderer
+public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
 {
+
+    Task? _ready;
+    /// <inheritdoc/>
+    public Task Ready => _ready ??= InitAsync();
+
     const string SvgNamespace = "http://www.w3.org/2000/svg";
 
     readonly SpawnJSRuntime _js;
@@ -43,16 +60,250 @@ public sealed class SpawnDomRenderer : Renderer
     /// </summary>
     readonly Dictionary<string, LogicalElement> _refCaptures = new();
 
+    SpawnJSRootComponentMappingCollection _rootComponentMappings;
+    /// <summary>
+    /// Root component mappings
+    /// </summary>
+    public IEnumerable<SpawnJSRootComponentMapping> RootComponentMappings => _rootComponentMappings;
+
     /// <summary>Constructs the renderer. Called by DI; components resolve services from <paramref name="serviceProvider"/>.</summary>
-    public SpawnDomRenderer(IServiceProvider serviceProvider, SpawnJSRuntime js)
-        : this(serviceProvider, js, NullLoggerFactory.Instance) { }
+    public SpawnDomRenderer(IServiceProvider serviceProvider, SpawnJSRuntime js, SpawnJSRootComponentMappingCollection rootComponentMappings)
+        : this(serviceProvider, js, rootComponentMappings, NullLoggerFactory.Instance) { }
 
     /// <summary>Constructs the renderer with an explicit logger factory.</summary>
-    public SpawnDomRenderer(IServiceProvider serviceProvider, SpawnJSRuntime js, ILoggerFactory loggerFactory)
+    public SpawnDomRenderer(IServiceProvider serviceProvider, SpawnJSRuntime js, SpawnJSRootComponentMappingCollection rootComponentMappings, ILoggerFactory loggerFactory)
         : base(serviceProvider, loggerFactory)
     {
         _js = js;
         _document = _js.Get<Document>("document")!;
+        _rootComponentMappings = rootComponentMappings;
+        _appBaseUri = new Uri(_js.AppBaseUri);
+        if (_js.GlobalScope == GlobalScope.Window)
+        {
+            foreach (var styleSheetUrl in _rootComponentMappings.StyleSheets)
+            {
+                TryAddSharedStyleSheet(styleSheetUrl, out _);
+            }
+        }
+    }
+    Uri _appBaseUri;
+    /// <summary>
+    /// The service BackgroundServiceManager will autostart this service be cause it implements IAsyncBackgroundService<br/>
+    /// Used to render registered Window components on start up when in a Window global scope
+    /// </summary>
+    /// <returns></returns>
+    private async Task InitAsync()
+    {
+        // Question: Do we need to wait for DOMContentLoaded event / readyState != "loading"?
+        // Render any _rootComponentMappings IF JS.GlobalScope == Window
+        if (_js.GlobalScope == GlobalScope.Window)
+        {
+            if (_document != null && _rootComponentMappings.Any())
+            {
+                UpdateDocumentCSS(true);
+                foreach (var component in _rootComponentMappings)
+                {
+                    await RenderMapping(component);
+                }
+            }
+        }
+    }
+    /// <summary>
+    /// This method adds are remove the 
+    /// </summary>
+    void UpdateDocumentCSS(bool skipRemoveCheck = false)
+    {
+        var anyNonShadow = _rootComponentMappings.Any(o => o.ShadowRootOptions == null);
+        if (anyNonShadow)
+        {
+            // becuase there are non-shadow root mappings we add the style sheets to the document
+            // add the style sheets to the shadow root (they don't inherit from document)
+            foreach (var styleSheetUrl in SharedStyleSheets)
+            {
+                using var linkElement = GetStyleSheet(_document, styleSheetUrl.Href);
+                if (linkElement != null) continue;
+                using var linkElementNew = AttachStyleSheet(_document, styleSheetUrl.Href);
+            }
+        }
+        else if (!skipRemoveCheck)
+        {
+            // none. remove the css
+            foreach (var styleSheetUrl in SharedStyleSheets)
+            {
+                using var linkElement = GetStyleSheet(_document, styleSheetUrl.Href);
+                linkElement?.Remove();
+            }
+        }
+    }
+    /// <summary>
+    /// Shared style sheets
+    /// </summary>
+    public IEnumerable<SharedStyleSheet> SharedStyleSheets => _SharedStyleSheets;
+    List<SharedStyleSheet> _SharedStyleSheets = new List<SharedStyleSheet>();
+    /// <summary>
+    /// Add a SharedStyleSheet
+    /// </summary>
+    /// <param name="styleSheetUrl"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public SharedStyleSheet AddSharedStyleSheet(string styleSheetUrl)
+    {
+        var url = new Uri(_appBaseUri, styleSheetUrl).ToString();
+        if (_SharedStyleSheets.Any(o => o.Href == url)) throw new Exception("Already exists");
+        var sharedStyleSheet = new SharedStyleSheet(url);
+        sharedStyleSheet.OnStyleSheetsChanged += CssStyleSheet_OnStyleSheetsChanged;
+        sharedStyleSheet.OnStyleSheetRemoved += CssStyleSheet_OnStyleSheetsChanged;
+        _SharedStyleSheets.Add(sharedStyleSheet);
+        return sharedStyleSheet;
+    }
+    /// <summary>
+    /// Tries adding a new SharedStyleSheet usign the specified styleSheetUrl and returne ture if a new one was added<br/>
+    /// sharedStyleSheet will be set to an the existing SharedStyleSheet if one exists or the new one if one was created
+    /// </summary>
+    /// <param name="styleSheetUrl"></param>
+    /// <param name="sharedStyleSheet"></param>
+    /// <returns></returns>
+    public bool TryAddSharedStyleSheet(string styleSheetUrl, out SharedStyleSheet sharedStyleSheet)
+    {
+        var url = new Uri(_appBaseUri, styleSheetUrl).ToString();
+        sharedStyleSheet = _SharedStyleSheets.FirstOrDefault(o => o.Href == url)!;
+        if (sharedStyleSheet != null) return false;
+        sharedStyleSheet = new SharedStyleSheet(url);
+        sharedStyleSheet.OnStyleSheetsChanged += CssStyleSheet_OnStyleSheetsChanged;
+        sharedStyleSheet.OnStyleSheetRemoved += CssStyleSheet_OnStyleSheetsChanged;
+        _SharedStyleSheets.Add(sharedStyleSheet);
+        return true;
+    }
+    /// <summary>
+    /// Returns the SharedStyleSheet associeted wit hthe specified styleSheetUrl or null
+    /// </summary>
+    /// <param name="styleSheetUrl"></param>
+    /// <returns></returns>
+    public SharedStyleSheet? GetSharedStyleSheet(string styleSheetUrl)
+    {
+        var url = new Uri(_appBaseUri, styleSheetUrl).ToString();
+        return _SharedStyleSheets.FirstOrDefault(o => o.Href == url);
+    }
+    /// <summary>
+    /// Remove a SharedStyleSheet
+    /// </summary>
+    /// <param name="sharedStyleSheetUrl"></param>
+    /// <returns></returns>
+    public bool RemoveSharedStyleSheet(string sharedStyleSheetUrl)
+    {
+        var sharedStyleSheet = GetSharedStyleSheet(sharedStyleSheetUrl);
+        if (sharedStyleSheet == null) return false;
+        return RemoveSharedStyleSheet(sharedStyleSheet);
+    }
+    /// <summary>
+    /// Remove a SharedStyleSheet
+    /// </summary>
+    /// <param name="sharedStyleSheet"></param>
+    /// <returns></returns>
+    public bool RemoveSharedStyleSheet(SharedStyleSheet sharedStyleSheet)
+    {
+        if (sharedStyleSheet == null || !_SharedStyleSheets.Contains(sharedStyleSheet)) return false;
+        sharedStyleSheet.OnStyleSheetsChanged -= CssStyleSheet_OnStyleSheetsChanged;
+        sharedStyleSheet.OnStyleSheetRemoved -= CssStyleSheet_OnStyleSheetsChanged;
+        _SharedStyleSheets.Remove(sharedStyleSheet);
+        sharedStyleSheet.Remove();  // this will make sure Removed is true on the SharedStyleSheet
+        // remove from document
+        var nonShadowRoot = _rootComponentMappings.Any(o => o.ShadowRoot == null);
+        if (nonShadowRoot)
+        {
+            using var linkElement = GetStyleSheet(_document, sharedStyleSheet.Href);
+            linkElement?.Remove();
+        }
+        // remove from shadow dom root nodes
+        foreach (var component in _rootComponentMappings)
+        {
+            if (component.ShadowRoot != null)
+            {
+                using var linkElement = GetStyleSheet(component.ShadowRoot, sharedStyleSheet.Href);
+                linkElement?.Remove();
+            }
+        }
+        return true;
+    }
+    void CssStyleSheet_OnStyleSheetsChanged(SharedStyleSheet sharedStyleSheet)
+    {
+        RemoveSharedStyleSheet(sharedStyleSheet);
+    }
+    private void CssStyleSheet_OnStyleSheetsChanged(SharedStyleSheet sharedStyleSheet, string oldHref)
+    {
+        // remove from document
+        var nonShadowRoot = _rootComponentMappings.Any(o => o.ShadowRoot == null);
+        if (nonShadowRoot)
+        {
+            using var linkElement = GetStyleSheet(_document, oldHref);
+            linkElement?.SetAttribute("href", sharedStyleSheet.Href);
+        }
+        // remove from shadow dom root nodes
+        foreach (var component in _rootComponentMappings)
+        {
+            if (component.ShadowRoot != null)
+            {
+                using var linkElement = GetStyleSheet(component.ShadowRoot, oldHref);
+                linkElement?.SetAttribute("href", sharedStyleSheet.Href);
+            }
+        }
+    }
+
+    async Task RenderMapping(SpawnJSRootComponentMapping component)
+    {
+        if (_js.GlobalScope != GlobalScope.Window) return;
+        // render
+        if (component.Host == null)
+        {
+            if (!string.IsNullOrEmpty(component.Selector))
+            {
+                component.Host = _document.QuerySelector(component.Selector);
+                if (component.Host == null)
+                {
+                    // should we throw, log it, ignore it (host not found)?
+                    return;
+                }
+            }
+            else
+            {
+                // when neither a Host or a Selector ar specified it means we simply create a new host
+                component.Host = _document.CreateElement("div");
+                using var body = _document.Body;
+                body!.Append(component.Host);
+            }
+        }
+        // Apply the component.HostStyle (if one was set)
+        if (!string.IsNullOrEmpty(component.HostStyle))
+        {
+            component.Host.SetAttribute("style", component.HostStyle);
+        }
+        // if component.ShadowRootOptions is set, we are rendering to the host shadow root instead of the host itself
+        if (component.ShadowRootOptions != null)
+        {
+            component.ShadowRoot = component.Host.AttachShadow(component.ShadowRootOptions);
+            // add the style sheets to the shadow root (they don't inherit from document)
+            foreach (var styleSheetUrl in SharedStyleSheets)
+            {
+                using var linkElement = AttachStyleSheet(component.ShadowRoot, styleSheetUrl.Href);
+            }
+            // fire the host config callback now that the host is known (style sheets already applied)
+            if (component.ConfigureHostCallback != null)
+            {
+                await component.ConfigureHostCallback(component);
+            }
+            // render the component
+            component.ComponentId = await RenderComponentAsync(component.ComponentType, component.ShadowRoot);
+        }
+        else
+        {
+            // fire the host config callback now that the host is known (style sheets already applied)
+            if (component.ConfigureHostCallback != null)
+            {
+                await component.ConfigureHostCallback(component);
+            }
+            // render the component
+            component.ComponentId = await RenderComponentAsync(component.ComponentType, component.Host);
+        }
     }
 
     /// <inheritdoc/>
@@ -176,6 +427,26 @@ public sealed class SpawnDomRenderer : Renderer
     // build's auto-generated {App}.styles.css scoped bundle - with only the app script on the page.
 
     /// <summary>
+    /// Returns the link element with the specified href using querySelector if it exists
+    /// </summary>
+    public Element? GetStyleSheet(Document document, string href)
+    {
+        if (document == null) return null;
+        var linkElement = document.QuerySelector($"link[rel=\"stylesheet\"][href=\"{href}\"]");
+        return linkElement;
+    }
+
+    /// <summary>
+    /// Returns the link element with the specified href using querySelector if it exists
+    /// </summary>
+    public Element? GetStyleSheet(ShadowRoot root, string href)
+    {
+        if (root == null) return null;
+        var linkElement = root.QuerySelector($"link[rel=\"stylesheet\"][href=\"{href}\"]");
+        return linkElement;
+    }
+
+    /// <summary>
     /// Creates a <c>&lt;link rel="stylesheet"&gt;</c> for <paramref name="href"/> and appends it INTO
     /// <paramref name="root"/>, so the sheet loads and applies inside that shadow root. Returns the link
     /// element - change its <c>href</c> later (e.g. to swap a theme) or remove it to unload the sheet.
@@ -261,82 +532,82 @@ public sealed class SpawnDomRenderer : Renderer
             switch (edit.Type)
             {
                 case RenderTreeEditType.PrependFrame:
-                {
-                    var frameIndex = edit.ReferenceFrameIndex;
-                    var frame = frames[frameIndex];
-                    var siblingIndex = edit.SiblingIndex;
-                    InsertFrame(componentId, parent, childIndexAtCurrentDepth + siblingIndex, frames, frame, frameIndex);
-                    break;
-                }
+                    {
+                        var frameIndex = edit.ReferenceFrameIndex;
+                        var frame = frames[frameIndex];
+                        var siblingIndex = edit.SiblingIndex;
+                        InsertFrame(componentId, parent, childIndexAtCurrentDepth + siblingIndex, frames, frame, frameIndex);
+                        break;
+                    }
                 case RenderTreeEditType.RemoveFrame:
-                {
-                    RemoveLogicalChild(parent, childIndexAtCurrentDepth + edit.SiblingIndex);
-                    break;
-                }
+                    {
+                        RemoveLogicalChild(parent, childIndexAtCurrentDepth + edit.SiblingIndex);
+                        break;
+                    }
                 case RenderTreeEditType.SetAttribute:
-                {
-                    var frame = frames[edit.ReferenceFrameIndex];
-                    var target = GetLogicalChild(parent, childIndexAtCurrentDepth + edit.SiblingIndex);
-                    if (target.Node is Element)
-                        ApplyAttribute(componentId, target, frame);
-                    else
-                        throw new InvalidOperationException("Cannot set attribute on non-element child");
-                    break;
-                }
+                    {
+                        var frame = frames[edit.ReferenceFrameIndex];
+                        var target = GetLogicalChild(parent, childIndexAtCurrentDepth + edit.SiblingIndex);
+                        if (target.Node is Element)
+                            ApplyAttribute(componentId, target, frame);
+                        else
+                            throw new InvalidOperationException("Cannot set attribute on non-element child");
+                        break;
+                    }
                 case RenderTreeEditType.RemoveAttribute:
-                {
-                    var target = GetLogicalChild(parent, childIndexAtCurrentDepth + edit.SiblingIndex);
-                    if (target.Node is Element)
-                        SetOrRemoveAttributeOrProperty(target, edit.RemovedAttributeName!, null);
-                    else
-                        throw new InvalidOperationException("Cannot remove attribute from non-element child");
-                    break;
-                }
+                    {
+                        var target = GetLogicalChild(parent, childIndexAtCurrentDepth + edit.SiblingIndex);
+                        if (target.Node is Element)
+                            SetOrRemoveAttributeOrProperty(target, edit.RemovedAttributeName!, null);
+                        else
+                            throw new InvalidOperationException("Cannot remove attribute from non-element child");
+                        break;
+                    }
                 case RenderTreeEditType.UpdateText:
-                {
-                    var frame = frames[edit.ReferenceFrameIndex];
-                    var textLogical = GetLogicalChild(parent, childIndexAtCurrentDepth + edit.SiblingIndex);
-                    if (textLogical.Node is Text)
-                        textLogical.Node.TextContent = frame.TextContent;
-                    else
-                        throw new InvalidOperationException("Cannot set text content on non-text child");
-                    break;
-                }
+                    {
+                        var frame = frames[edit.ReferenceFrameIndex];
+                        var textLogical = GetLogicalChild(parent, childIndexAtCurrentDepth + edit.SiblingIndex);
+                        if (textLogical.Node is Text)
+                            textLogical.Node.TextContent = frame.TextContent;
+                        else
+                            throw new InvalidOperationException("Cannot set text content on non-text child");
+                        break;
+                    }
                 case RenderTreeEditType.UpdateMarkup:
-                {
-                    var frame = frames[edit.ReferenceFrameIndex];
-                    var siblingIndex = childIndexAtCurrentDepth + edit.SiblingIndex;
-                    RemoveLogicalChild(parent, siblingIndex);
-                    InsertMarkup(parent, siblingIndex, frame);
-                    break;
-                }
+                    {
+                        var frame = frames[edit.ReferenceFrameIndex];
+                        var siblingIndex = childIndexAtCurrentDepth + edit.SiblingIndex;
+                        RemoveLogicalChild(parent, siblingIndex);
+                        InsertMarkup(parent, siblingIndex, frame);
+                        break;
+                    }
                 case RenderTreeEditType.StepIn:
-                {
-                    parent = GetLogicalChild(parent, childIndexAtCurrentDepth + edit.SiblingIndex);
-                    currentDepth++;
-                    childIndexAtCurrentDepth = 0;
-                    break;
-                }
+                    {
+                        parent = GetLogicalChild(parent, childIndexAtCurrentDepth + edit.SiblingIndex);
+                        currentDepth++;
+                        childIndexAtCurrentDepth = 0;
+                        break;
+                    }
                 case RenderTreeEditType.StepOut:
-                {
-                    parent = parent.Parent!;
-                    currentDepth--;
-                    childIndexAtCurrentDepth = currentDepth == 0 ? childIndex : 0;
-                    break;
-                }
+                    {
+                        parent = parent.Parent!;
+                        currentDepth--;
+                        childIndexAtCurrentDepth = currentDepth == 0 ? childIndex : 0;
+                        break;
+                    }
                 case RenderTreeEditType.PermutationListEntry:
-                {
-                    permutationList ??= new();
-                    permutationList.Add((childIndexAtCurrentDepth + edit.SiblingIndex,
-                                         childIndexAtCurrentDepth + edit.MoveToSiblingIndex));
-                    break;
-                }
+                    {
+                        permutationList ??= new();
+                        permutationList.Add((childIndexAtCurrentDepth + edit.SiblingIndex,
+                                             childIndexAtCurrentDepth + edit.MoveToSiblingIndex));
+                        break;
+                    }
                 case RenderTreeEditType.PermutationListEnd:
-                {
-                    PermuteLogicalChildren(parent, permutationList!);
-                    permutationList = null;
-                    break;
-                }
+                    {
+                        PermuteLogicalChildren(parent, permutationList!);
+                        permutationList = null;
+                        break;
+                    }
                 default:
                     throw new InvalidOperationException($"Unknown edit type: {edit.Type}");
             }
@@ -514,17 +785,17 @@ public sealed class SpawnDomRenderer : Renderer
         switch (name)
         {
             case "value":
-            {
-                using var input = element.Node.JSRefAs<HTMLInputElement>();
-                input.Value = value as string ?? value?.ToString() ?? "";
-                return true;
-            }
+                {
+                    using var input = element.Node.JSRefAs<HTMLInputElement>();
+                    input.Value = value as string ?? value?.ToString() ?? "";
+                    return true;
+                }
             case "checked":
-            {
-                using var input = element.Node.JSRefAs<HTMLInputElement>();
-                input.Checked = value is bool b ? b : value is not null;
-                return true;
-            }
+                {
+                    using var input = element.Node.JSRefAs<HTMLInputElement>();
+                    input.Checked = value is bool b ? b : value is not null;
+                    return true;
+                }
             default:
                 return false;
         }

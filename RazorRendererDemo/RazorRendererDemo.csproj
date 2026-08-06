@@ -2,15 +2,16 @@
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
-		<CompressionEnabled>false</CompressionEnabled>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<!-- Disable compression (optional, based on use case) -->
+		<CompressionEnabled>false</CompressionEnabled>
 		<!-- Disables the Hot Reload background client for WASM -->
 		<WasmEnableHotReload>false</WasmEnableHotReload>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SpawnDev.SpawnJS.WebWorkers" Version="1.0.3" />
+		<PackageReference Include="SpawnDev.SpawnJS.WebWorkers" Version="1.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>

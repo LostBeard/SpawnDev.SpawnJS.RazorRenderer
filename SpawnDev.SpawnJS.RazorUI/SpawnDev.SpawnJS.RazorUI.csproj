@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
-		<Version>0.1.0</Version>
+		<Version>0.1.0-local.1</Version>
 		<Authors>LostBeard</Authors>
 		<Title>SpawnDev.SpawnJS.RazorUI</Title>
 		<Description>A small, themeable UI component library for SpawnDev.SpawnJS.RazorRenderer. Shadow-root-first: components are styled by a constructable stylesheet adopted into each root, themed with CSS custom properties that can be swapped live.</Description>
@@ -14,11 +14,17 @@
 		<!-- Serve wwwroot at /razor-ui/ instead of /_content/SpawnDev.SpawnJS.RazorUI/... so the CSS URLs are
 		     clean and there is no _content path to trip up a browser extension. Consumers may override. -->
 		<StaticWebAssetBasePath Condition="'$(StaticWebAssetBasePath)' == ''">/</StaticWebAssetBasePath>
+		
+		<!-- Generated CSS will be fingerprinted if not disabled -->
+		<StaticWebAssetFingerprintingEnabled>false</StaticWebAssetFingerprintingEnabled>
+		<StaticWebAssetsFingerprintContent>false</StaticWebAssetsFingerprintContent>
+		<!-- Disable compression (optional, based on use case) -->
+		<CompressionEnabled>false</CompressionEnabled>
+				
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.10" />
-		<PackageReference Include="SpawnDev.SpawnJS" Version="1.1.6" />
 		<ProjectReference Include="..\SpawnDev.SpawnJS.RazorRenderer\SpawnDev.SpawnJS.RazorRenderer.csproj" />
 	</ItemGroup>
 
