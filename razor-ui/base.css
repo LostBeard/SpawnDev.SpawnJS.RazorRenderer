@@ -160,3 +160,53 @@
   font: inherit; font-variant-numeric: tabular-nums;
   color: var(--ui-muted, #6b7280); white-space: nowrap;
 }
+
+/* ── Virtual list ─────────────────────────────────────────────────────────── */
+/* structural overflow/position are set inline by the component; base.css adds only cosmetics */
+.ui-virtual-list {
+  overscroll-behavior: contain;
+  background: var(--ui-surface, #fff); color: var(--ui-text, #1a1a1f);
+}
+.ui-virtual-list-row { box-sizing: border-box; }
+
+/* ── Tree ─────────────────────────────────────────────────────────────────── */
+.ui-tree, .ui-tree-children { list-style: none; margin: 0; padding: 0; }
+.ui-tree-row {
+  display: flex; align-items: center; gap: .25rem; padding: .2rem .25rem;
+  border-radius: var(--ui-radius, 6px); cursor: pointer; user-select: none;
+  color: var(--ui-text, #1a1a1f);
+}
+.ui-tree-row:hover { background: var(--ui-hover, rgba(127,127,127,.14)); }
+.ui-tree-row-selected, .ui-tree-row-selected:hover {
+  background: var(--ui-accent, #4f46e5); color: var(--ui-on-accent, #fff);
+}
+.ui-tree-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.1rem; height: 1.1rem; flex: none; color: var(--ui-muted, #6b7280);
+  transition: transform .12s ease;
+}
+.ui-tree-toggle-open { transform: rotate(90deg); }
+.ui-tree-toggle-empty { visibility: hidden; }
+.ui-tree-row-selected .ui-tree-toggle { color: var(--ui-on-accent, #fff); }
+.ui-tree-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Data grid ────────────────────────────────────────────────────────────── */
+.ui-datagrid {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--ui-border, #e2e2ea); border-radius: var(--ui-radius, 8px);
+  overflow: hidden; background: var(--ui-surface, #fff); color: var(--ui-text, #1a1a1f);
+}
+.ui-datagrid-header {
+  display: flex; align-items: center; height: 36px; flex: none; font-weight: 600;
+  border-bottom: 1px solid var(--ui-border, #e2e2ea);
+  background: var(--ui-progress-track, rgba(127,127,127,.06));
+}
+.ui-datagrid-row {
+  display: flex; align-items: center; height: 100%;
+  border-bottom: 1px solid var(--ui-border, #e2e2ea);
+}
+.ui-datagrid-cell { padding: 0 .6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-datagrid-th { display: flex; align-items: center; gap: .25rem; }
+.ui-datagrid-sortable { cursor: pointer; user-select: none; }
+.ui-datagrid-sortable:hover { background: var(--ui-hover, rgba(127,127,127,.10)); }
+.ui-datagrid-title { overflow: hidden; text-overflow: ellipsis; }
