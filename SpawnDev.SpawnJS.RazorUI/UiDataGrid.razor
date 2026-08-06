@@ -1,0 +1,91 @@
+@inherits UiComponentBase
+@typeparam TItem
+
+@* A virtualized data grid. Child <UiGridColumn> definitions register via the cascaded grid; the body rows are
+   a UiVirtualList so thousands of rows cost a handful of DOM nodes, fed by the async LoadData(start,count,sort)
+   window (same pattern as UiVirtualList). Clicking a sortable header toggles sort and refetches. *@
+<CascadingValue Value="this" IsFixed="true">
+    @Columns
+</CascadingValue>
+
+<div class="@CssClass("ui-datagrid")" style="@Style(null)" @attributes="PassThroughAttributes">
+    <div class="ui-datagrid-header">
+        @foreach (var col in _columns)
+        {
+            var c = col;
+            <div class="ui-datagrid-cell ui-datagrid-th @(c.Sortable ? "ui-datagrid-sortable" : null)"
+                 style="@CellStyle(c)" @onclick="@(() => OnHeaderClickAsync(c))">
+                <span class="ui-datagrid-title">@c.Title</span>
+                @if (c.Sortable && _sortField == c.SortField)
+                {
+                    <UiIcon Name="@(_sortDescending ? "chevron-down" : "chevron-up")" Size="14" />
+                }
+            </div>
+        }
+    </div>
+    <UiVirtualList @ref="_list" TItem="TItem" TotalCount="Count" RowHeight="RowHeight" Height="Height" LoadRange="LoadRangeAsync">
+        <ItemTemplate>
+            <div class="ui-datagrid-row">
+                @foreach (var col in _columns)
+                {
+                    <div class="ui-datagrid-cell" style="@CellStyle(col)">
+                        @if (col.Template is not null)
+                        {
+                            @col.Template(context)
+                        }
+                        else
+                        {
+                            @col.Value(context)
+                        }
+                    </div>
+                }
+            </div>
+        </ItemTemplate>
+    </UiVirtualList>
+</div>
+
+@code {
+    /// <summary>The <see cref="UiGridColumn{TItem}"/> definitions.</summary>
+    [Parameter] public RenderFragment? Columns { get; set; }
+
+    /// <summary>Total row count (the virtual extent).</summary>
+    [Parameter] public int Count { get; set; }
+
+    /// <summary>Row height in pixels. Default 32.</summary>
+    [Parameter] public double RowHeight { get; set; } = 32;
+
+    /// <summary>Body viewport height in pixels. Default 320.</summary>
+    [Parameter] public double Height { get; set; } = 320;
+
+    /// <summary>Async windowed data source: returns items [start, start+count) for the given sort field/direction.</summary>
+    [Parameter] public Func<int, int, string?, bool, Task<IReadOnlyList<TItem>>>? LoadData { get; set; }
+
+    readonly List<UiGridColumn<TItem>> _columns = new();
+    UiVirtualList<TItem>? _list;
+    string? _sortField;
+    bool _sortDescending;
+
+    /// <summary>Registers a column. Called by <see cref="UiGridColumn{TItem}"/> on init.</summary>
+    public void AddColumn(UiGridColumn<TItem> column)
+    {
+        if (_columns.Contains(column)) return;
+        _columns.Add(column);
+        StateHasChanged();
+    }
+
+    Task<IReadOnlyList<TItem>> LoadRangeAsync(int start, int count)
+        => LoadData is null
+            ? Task.FromResult<IReadOnlyList<TItem>>(System.Array.Empty<TItem>())
+            : LoadData(start, count, _sortField, _sortDescending);
+
+    async Task OnHeaderClickAsync(UiGridColumn<TItem> col)
+    {
+        if (!col.Sortable || col.SortField is null) return;
+        if (_sortField == col.SortField) _sortDescending = !_sortDescending;
+        else { _sortField = col.SortField; _sortDescending = false; }
+        if (_list is not null) await _list.RefreshAsync();
+    }
+
+    string CellStyle(UiGridColumn<TItem> col)
+        => string.IsNullOrEmpty(col.Width) ? "flex:1 1 0;min-width:0" : $"flex:0 0 {col.Width};width:{col.Width}";
+}

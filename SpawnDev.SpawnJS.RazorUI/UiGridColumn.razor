@@ -1,0 +1,33 @@
+@inherits UiComponentBase
+@typeparam TItem
+
+@* A grid column definition. Renders no output itself - on init it registers with the enclosing UiDataGrid
+   (via the cascaded grid), which reads Title/Property/Template/etc. to render the header and cells. *@
+
+@code {
+    /// <summary>The grid this column belongs to (cascaded by <see cref="UiDataGrid{TItem}"/>).</summary>
+    [CascadingParameter] public UiDataGrid<TItem>? Grid { get; set; }
+
+    /// <summary>Header text.</summary>
+    [Parameter] public string Title { get; set; } = "";
+
+    /// <summary>Cell value accessor (used when <see cref="Template"/> is not set; also the default text).</summary>
+    [Parameter] public Func<TItem, object?>? Property { get; set; }
+
+    /// <summary>Identifier passed to the grid's LoadData when sorting by this column. Required for sorting.</summary>
+    [Parameter] public string? SortField { get; set; }
+
+    /// <summary>Whether this column can be sorted (needs <see cref="SortField"/>).</summary>
+    [Parameter] public bool Sortable { get; set; }
+
+    /// <summary>Custom cell content; when set it overrides <see cref="Property"/>.</summary>
+    [Parameter] public RenderFragment<TItem>? Template { get; set; }
+
+    /// <summary>Optional fixed CSS width (e.g. <c>120px</c>, <c>8rem</c>); columns without a width share the rest.</summary>
+    [Parameter] public string? Width { get; set; }
+
+    protected override void OnInitialized() => Grid?.AddColumn(this);
+
+    /// <summary>Renders the cell text from <see cref="Property"/>.</summary>
+    public string Value(TItem item) => Property?.Invoke(item)?.ToString() ?? "";
+}

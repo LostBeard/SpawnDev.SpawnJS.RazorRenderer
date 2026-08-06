@@ -116,6 +116,18 @@
         return loaded.Count > 0;
     }
 
+    /// <summary>
+    /// Clears cached data and reloads the current window - call after the data source changes (e.g. a sort or
+    /// filter) so stale windows are refetched.
+    /// </summary>
+    public async Task RefreshAsync()
+    {
+        _cache.Clear();
+        _requested.Clear();
+        await EnsureLoadedAsync();
+        StateHasChanged();
+    }
+
     // overflow + position are structural (the component can't virtualize without them), so they are inline
     // rather than in base.css - the list works whether or not the theme stylesheet is loaded.
     string RootStyle => $"height:{Inv(Height)}px;overflow-y:auto;position:relative";

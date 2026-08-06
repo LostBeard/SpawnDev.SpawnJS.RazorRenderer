@@ -1,0 +1,6 @@
+@* Reads a cascaded value and stamps it into the DOM for the probe test. *@
+<span data-cascade="@(Token ?? "none")">@Token</span>
+
+@code {
+    [CascadingParameter] public string? Token { get; set; }
+}

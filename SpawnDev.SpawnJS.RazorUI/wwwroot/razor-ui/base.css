@@ -189,3 +189,24 @@
 .ui-tree-toggle-empty { visibility: hidden; }
 .ui-tree-row-selected .ui-tree-toggle { color: var(--ui-on-accent, #fff); }
 .ui-tree-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Data grid ────────────────────────────────────────────────────────────── */
+.ui-datagrid {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--ui-border, #e2e2ea); border-radius: var(--ui-radius, 8px);
+  overflow: hidden; background: var(--ui-surface, #fff); color: var(--ui-text, #1a1a1f);
+}
+.ui-datagrid-header {
+  display: flex; align-items: center; height: 36px; flex: none; font-weight: 600;
+  border-bottom: 1px solid var(--ui-border, #e2e2ea);
+  background: var(--ui-progress-track, rgba(127,127,127,.06));
+}
+.ui-datagrid-row {
+  display: flex; align-items: center; height: 100%;
+  border-bottom: 1px solid var(--ui-border, #e2e2ea);
+}
+.ui-datagrid-cell { padding: 0 .6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-datagrid-th { display: flex; align-items: center; gap: .25rem; }
+.ui-datagrid-sortable { cursor: pointer; user-select: none; }
+.ui-datagrid-sortable:hover { background: var(--ui-hover, rgba(127,127,127,.10)); }
+.ui-datagrid-title { overflow: hidden; text-overflow: ellipsis; }

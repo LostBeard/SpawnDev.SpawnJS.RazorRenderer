@@ -1,0 +1,9 @@
+@* Probe: does the renderer flow CascadingValue -> [CascadingParameter] into a child component?
+   This is the mechanism UiDataGrid's <UiGridColumn> children use to register with the grid. *@
+<CascadingValue Value="_token">
+    <CascadeChild />
+</CascadingValue>
+
+@code {
+    readonly string _token = "cascaded-42";
+}

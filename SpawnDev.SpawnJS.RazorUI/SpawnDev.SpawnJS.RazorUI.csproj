@@ -5,23 +5,43 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
-		<Version>0.1.0-local.1</Version>
+		<Version>1.0.0-local.1</Version>
+		<PackageReleaseNotes>v0.1.0 - New</PackageReleaseNotes>
 		<Authors>LostBeard</Authors>
 		<Title>SpawnDev.SpawnJS.RazorUI</Title>
-		<Description>A small, themeable UI component library for SpawnDev.SpawnJS.RazorRenderer. Shadow-root-first: components are styled by a constructable stylesheet adopted into each root, themed with CSS custom properties that can be swapped live.</Description>
+		<Description>A small, themeable UI component library for SpawnDev.SpawnJS.RazorRenderer.</Description>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<EmbedAllSources>true</EmbedAllSources>
+		<DebugType>Embedded</DebugType>
+		<PackageProjectUrl>https://github.com/LostBeard/SpawnDev.SpawnJS.RazorRenderer</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageIcon>icon-128.png</PackageIcon>
+		<RepositoryUrl>https://github.com/LostBeard/SpawnDev.SpawnJS.RazorRenderer.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>DotNetWebAssembly;Browser</PackageTags>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
+		<EnableDefaultCompileItems>true</EnableDefaultCompileItems>
 		<IsPackable>true</IsPackable>
+		<LangVersion>latest</LangVersion>
+		
 		<!-- Serve wwwroot at /razor-ui/ instead of /_content/SpawnDev.SpawnJS.RazorUI/... so the CSS URLs are
 		     clean and there is no _content path to trip up a browser extension. Consumers may override. -->
 		<StaticWebAssetBasePath Condition="'$(StaticWebAssetBasePath)' == ''">/</StaticWebAssetBasePath>
-		
+
 		<!-- Generated CSS will be fingerprinted if not disabled -->
 		<StaticWebAssetFingerprintingEnabled>false</StaticWebAssetFingerprintingEnabled>
 		<StaticWebAssetsFingerprintContent>false</StaticWebAssetsFingerprintContent>
 		<!-- Disable compression (optional, based on use case) -->
 		<CompressionEnabled>false</CompressionEnabled>
-				
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="Images\icon-128.png" Pack="true" PackagePath="\" />
+		<None Include="..\LICENSE.txt" Pack="true" PackagePath="\" />
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.10" />
