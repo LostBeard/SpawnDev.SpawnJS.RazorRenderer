@@ -52,7 +52,8 @@ the UI foundation for most future SpawnJS apps.
 | Inputs | `UiInput` (`@bind-Value`) | ✅ exists | - | ✅ |
 | Overlays | `UiDialog` (backdrop + z-index) | ✅ exists | - | ✅ |
 | Feedback | `UiProgressBar` (linear: determinate/indeterminate/striped/label) | ✅ done | ✅ 2 tests | ✅ (awaiting TJ visual confirm) |
-| Feedback | `UiProgressCircle` (donut/circular SVG: value/size/stroke/indeterminate) | ✅ done | ✅ 2 tests (incl. real dashoffset geometry) | ✅ (awaiting TJ visual confirm) |
+| Feedback | `UiProgressCircle` (donut/circular SVG: value/size/stroke/indeterminate) | ✅ done | ✅ 2 tests (incl. real dashoffset geometry) | ✅ confirmed |
+| Media/Inputs | `UiSlider` (themed range: `@bind-Value`, Min/Max/Step, filled track) | ✅ done | ✅ 2 tests (render + two-way drag) | ✅ (drives the Progress demo) |
 
 Legend: ✅ done · 🔜 in progress/next · ⬜ backlog
 

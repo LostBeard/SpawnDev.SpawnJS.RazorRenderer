@@ -1,0 +1,41 @@
+@inherits UiComponentBase
+
+@* A themed range slider built on a native <input type="range"> - so drag, keyboard, focus and screen-reader
+   semantics come for free - with a custom-drawn filled track driven by the --ui-slider-fill CSS variable.
+   Two-way via @bind-Value. This is the seek/volume primitive the media players build on. *@
+<input type="range" class="@CssClass("ui-slider")" style="@Style(FillStyle)"
+       min="@Inv(Min)" max="@Inv(Max)" step="@StepAttr" value="@Inv(Value)"
+       @oninput="OnInput" @attributes="PassThroughAttributes" />
+
+@code {
+    /// <summary>Current value. Supports <c>@bind-Value</c>.</summary>
+    [Parameter] public double Value { get; set; }
+
+    /// <summary>Raised as the user drags (paired with <see cref="Value"/> for two-way binding).</summary>
+    [Parameter] public EventCallback<double> ValueChanged { get; set; }
+
+    /// <summary>Lower bound. Default 0.</summary>
+    [Parameter] public double Min { get; set; } = 0;
+
+    /// <summary>Upper bound. Default 100.</summary>
+    [Parameter] public double Max { get; set; } = 100;
+
+    /// <summary>Step increment; 0 (or less) means <c>any</c> (continuous). Default 1.</summary>
+    [Parameter] public double Step { get; set; } = 1;
+
+    double Fraction => Max > Min ? Math.Clamp((Value - Min) / (Max - Min), 0, 1) : 0;
+    string FillStyle => $"--ui-slider-fill:{Inv(Fraction * 100)}%";
+    string StepAttr => Step > 0 ? Inv(Step) : "any";
+
+    async Task OnInput(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out var v))
+        {
+            Value = v;
+            await ValueChanged.InvokeAsync(Value);
+        }
+    }
+
+    static string Inv(double v) => v.ToString(System.Globalization.CultureInfo.InvariantCulture);
+}

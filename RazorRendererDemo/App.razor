@@ -22,7 +22,7 @@
 
     <UiCard Title="Progress">
         <UiStack Gap="0.9rem" style="margin-top:.5rem;">
-            <input type="range" min="0" max="100" @bind="_progress" @bind:event="oninput" style="width:100%;" />
+            <UiSlider @bind-Value="_progress" Min="0" Max="100" />
             <UiProgressBar Value="_progress" ShowValue="true" />
             <UiProgressBar Value="_progress" Striped="true" ShowValue="true" />
             <UiProgressBar Indeterminate="true" />
