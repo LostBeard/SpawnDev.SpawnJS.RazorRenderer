@@ -154,3 +154,9 @@
 .ui-icon-button:active { background: var(--ui-hover-strong, rgba(127,127,127,.24)); }
 .ui-icon-button:focus-visible { outline: 2px solid var(--ui-accent, #4f46e5); outline-offset: 2px; }
 .ui-icon-button:disabled { opacity: .5; cursor: default; }
+
+/* ── Time label ───────────────────────────────────────────────────────────── */
+.ui-time {
+  font: inherit; font-variant-numeric: tabular-nums;
+  color: var(--ui-muted, #6b7280); white-space: nowrap;
+}

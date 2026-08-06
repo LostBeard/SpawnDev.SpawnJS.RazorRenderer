@@ -1,0 +1,25 @@
+@inherits UiComponentBase
+
+@* A time label for media positions/durations. Formats a seconds value as mm:ss, or hh:mm:ss when the value
+   reaches an hour (or ShowHours forces it). Tabular figures so it doesn't jitter as digits change. *@
+<span class="@CssClass("ui-time")" style="@Style(null)" @attributes="PassThroughAttributes">@Formatted</span>
+
+@code {
+    /// <summary>Time position in seconds (negative is clamped to 0).</summary>
+    [Parameter] public double Seconds { get; set; }
+
+    /// <summary>Always render hours (hh:mm:ss) even below one hour.</summary>
+    [Parameter] public bool ShowHours { get; set; }
+
+    string Formatted
+    {
+        get
+        {
+            var total = (long)Math.Max(0, Math.Floor(Seconds));
+            var h = total / 3600;
+            var m = total % 3600 / 60;
+            var s = total % 60;
+            return (ShowHours || h > 0) ? $"{h}:{m:D2}:{s:D2}" : $"{m:D2}:{s:D2}";
+        }
+    }
+}

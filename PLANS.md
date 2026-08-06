@@ -56,6 +56,7 @@ the UI foundation for most future SpawnJS apps.
 | Media/Inputs | `UiSlider` (themed range: `@bind-Value`, Min/Max/Step, filled track) | ✅ done | ✅ 2 tests (render + two-way drag) | ✅ (drives the Progress demo) |
 | Media/Icons | `UiIcon` (inline-SVG set: play/pause/stop/skip/volume/fullscreen) | ✅ done | ✅ shared with UiIconButton | ✅ media preview |
 | Media/Icons | `UiIconButton` (circular ghost button, Icon/ChildContent, OnClick, aria-label) | ✅ done | ✅ 3 tests (icon shape, label, click) | ✅ media preview |
+| Media | `UiTime` (mm:ss / hh:mm:ss position/duration label) | ✅ done | ✅ 2 tests (mm:ss, hh:mm:ss) | ⬜ |
 
 Legend: ✅ done · 🔜 in progress/next · ⬜ backlog
 
