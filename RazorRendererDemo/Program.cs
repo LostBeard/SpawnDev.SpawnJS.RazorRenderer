@@ -11,14 +11,12 @@ using SpawnDev.SpawnJS.WebWorkers;
 var builder = SpawnJSAppBuilder.CreateDefault(args, out var JS);
 
 // easy way to detect if we are running in a browser extension content script
-// needs to be tested in Firefox. I believe globalThis.consturctor.name in fore content script is not
-// set and BlazorJS.BrowserExtension handled this be setting it to 'Window' when detected.
-// Either that or better detection will be needed to adjsut for SpawnJS
+// needs to be tested in Firefox. I believe globalThis.constructor.name in Firefox content script is not
+// set and BlazorJS.BrowserExtension handled this be setting it to 'Window' when detected before BlazorJS loaded.
+// Either that needs to be done or better detection in SpawnJS will be needed.
 var isBrowserExtensionContentScript = JS.GlobalScope == GlobalScope.Window && JS.AppBaseUri.StartsWith("chrome-extension://");
 
-// Adds auto-generated App style sheet and auto-generated RCL stylesheet (fingerprinting and compression disabled)
-builder.RootComponents.AddSharedStyleSheet("RazorRendererDemo.styles.css");
-
+// We'll add components based what the environment is detected
 if (isBrowserExtensionContentScript)
 {
     // When running as browser extension content script we'll render Apptray.razor instead of an App.razor
@@ -30,6 +28,9 @@ else
     // Add root components
     builder.RootComponents.Add<App>(new AttachShadowRootOptions { Mode = "open" });
 }
+
+// Adds auto-generated App style sheet and auto-generated RCL stylesheet (fingerprinting and compression disabled)
+builder.RootComponents.AddSharedStyleSheet("RazorRendererDemo.styles.css");
 
 // register WebWorkerService
 builder.Services.AddWebWorkerService();
