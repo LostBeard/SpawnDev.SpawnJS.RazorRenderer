@@ -14,7 +14,8 @@ var builder = SpawnJSAppBuilder.CreateDefault(args, out var JS);
 // needs to be tested in Firefox. I believe globalThis.constructor.name in Firefox content script is not
 // set and BlazorJS.BrowserExtension handled this be setting it to 'Window' when detected before BlazorJS loaded.
 // Either that needs to be done or better detection in SpawnJS will be needed.
-var isBrowserExtensionContentScript = JS.GlobalScope == GlobalScope.Window && JS.AppBaseUri.StartsWith("chrome-extension://");
+var appBaseUri = new Uri(JS.AppBaseUri);
+var isBrowserExtensionContentScript = JS.GlobalScope == GlobalScope.Window && appBaseUri.Scheme.Contains("-extension");
 
 // We'll add components based what the environment is detected
 if (isBrowserExtensionContentScript)

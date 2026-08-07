@@ -1,6 +1,6 @@
 {
   "background": {
-    "scripts": [ "wwwroot/background.js" ]
+    "scripts": [ "app/background.js" ]
   },
   "browser_specific_settings": {
     "gecko": {

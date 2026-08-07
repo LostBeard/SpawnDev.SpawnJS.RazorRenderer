@@ -26,8 +26,7 @@
 		<IsPackable>true</IsPackable>
 		<LangVersion>latest</LangVersion>
 		
-		<!-- Serve wwwroot at /razor-ui/ instead of /_content/SpawnDev.SpawnJS.RazorUI/... so the CSS URLs are
-		     clean and there is no _content path to trip up a browser extension. Consumers may override. -->
+		<!-- Serve wwwroot at / -->
 		<StaticWebAssetBasePath Condition="'$(StaticWebAssetBasePath)' == ''">/</StaticWebAssetBasePath>
 
 		<!-- Generated CSS will be fingerprinted if not disabled -->
