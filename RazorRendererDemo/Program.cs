@@ -7,13 +7,10 @@ using SpawnDev.SpawnJS.RazorRenderer;
 using SpawnDev.SpawnJS.RazorUI;
 using SpawnDev.SpawnJS.WebWorkers;
 
-// SpawnJSApp is a very minimal DI container that can be used when not using something else.
+// SpawnJSApp is a minimal DI container with SpawnJSRuntime and BackgroundServiceManager.
 var builder = SpawnJSAppBuilder.CreateDefault(args, out var JS);
 
 // easy way to detect if we are running in a browser extension content script
-// needs to be tested in Firefox. I believe globalThis.constructor.name in Firefox content script is not
-// set and BlazorJS.BrowserExtension handled this be setting it to 'Window' when detected before BlazorJS loaded.
-// Either that needs to be done or better detection in SpawnJS will be needed.
 var appBaseUri = new Uri(JS.AppBaseUri);
 var isBrowserExtensionContentScript = JS.GlobalScope == GlobalScope.Window && appBaseUri.Scheme.Contains("-extension");
 
@@ -43,7 +40,7 @@ builder.Services.AddRazorRenderer();
 builder.Services.AddRazorUI();
 
 // Additional services
-builder.Services.AddSingleton<TestService>();
+builder.Services.AddSingleton<AppService>();
 
 // HTTPClient set to the app's base address 
 builder.Services.AddSingleton(sp => new HttpClient { BaseAddress = new Uri(JS.AppBaseUri) });
