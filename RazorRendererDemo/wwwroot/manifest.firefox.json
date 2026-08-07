@@ -1,0 +1,11 @@
+{
+  "background": {
+    "scripts": [ "wwwroot/background.js" ]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "spawnjsrazorrenderer@spawndev.com",
+      "strict_min_version": "42.0"
+    }
+  }
+}
