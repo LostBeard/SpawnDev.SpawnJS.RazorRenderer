@@ -10,6 +10,10 @@ using SpawnDev.SpawnJS.WebWorkers;
 // SpawnJSApp is a very minimal DI container that can be used when not using something else.
 var builder = SpawnJSAppBuilder.CreateDefault(args, out var JS);
 
+// easy way to detect if we are running in a browser extension content script
+// needs to be tested in Firefox. I believe globalThis.consturctor.name in fore content script is not
+// set and BlazorJS.BrowserExtension handled this be setting it to 'Window' when detected.
+// Either that or better detection will be needed to adjsut for SpawnJS
 var isBrowserExtensionContentScript = JS.GlobalScope == GlobalScope.Window && JS.AppBaseUri.StartsWith("chrome-extension://");
 
 // Adds auto-generated App style sheet and auto-generated RCL stylesheet (fingerprinting and compression disabled)
