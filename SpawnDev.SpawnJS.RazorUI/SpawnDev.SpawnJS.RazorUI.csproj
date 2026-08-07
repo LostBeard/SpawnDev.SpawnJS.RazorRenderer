@@ -1,12 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
-		<Version>1.0.0-local.1</Version>
-		<PackageReleaseNotes>v0.1.0 - New</PackageReleaseNotes>
+		<Version>1.0.0</Version>
+		<PackageReleaseNotes>v1.0.0 - New</PackageReleaseNotes>
 		<Authors>LostBeard</Authors>
 		<Title>SpawnDev.SpawnJS.RazorUI</Title>
 		<Description>A small, themeable UI component library for SpawnDev.SpawnJS.RazorRenderer.</Description>
@@ -44,7 +44,16 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.10" />
-		<ProjectReference Include="..\SpawnDev.SpawnJS.RazorRenderer\SpawnDev.SpawnJS.RazorRenderer.csproj" />
+	</ItemGroup>
+
+	<!-- ProjectReference used for Debug builds -->
+	<ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+		<ProjectReference Include="..\SpawnDev.SpawnJS.RazorRenderer\SpawnDev.SpawnJS.RazorRenderer.csproj"  />
+	</ItemGroup>
+
+	<!-- PackageReference used for Release builds -->
+	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+		<PackageReference Include="SpawnDev.SpawnJS.RazorRenderer" Version="1.0.3"  />
 	</ItemGroup>
 
 	<ItemGroup>
