@@ -17,8 +17,9 @@ builder.RootComponents.AddSharedStyleSheet("RazorRendererDemo.styles.css");
 
 if (isBrowserExtensionContentScript)
 {
-    // 
-    builder.RootComponents.Add<AppTray>(new AttachShadowRootOptions { Mode = "open" }).SetHostStyle("position: fixed; top: 0; left: 50%;");
+    // When running as browser extension content script we'll render Apptray.razor instead of an App.razor
+    // And we'll add styling to the host itself that will be created to handle the ShadowRoot so it renders out-of-line from the website's own elements
+    builder.RootComponents.Add<AppTray>(new AttachShadowRootOptions { Mode = "open" }).SetHostStyle("position: fixed; top: 0; left: 50%; z-index: 65536;");
 }
 else
 {
