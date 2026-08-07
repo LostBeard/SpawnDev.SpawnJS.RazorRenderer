@@ -65,7 +65,7 @@ for %%F in ("%outputPath%\wwwroot\manifest.*.json") do (
     ) else (
         echo Zipping target folder for !browser! submission...
         if exist "!targetDir!.zip" del /Q "!targetDir!.zip"
-        powershell -Command "Compress-Archive -Path '!targetDir!' -DestinationPath '!targetDir!.zip' -Force"
+        powershell -Command "Compress-Archive -Path '!targetDir!\*' -DestinationPath '!targetDir!.zip' -Force"
     )
 )
 
@@ -87,7 +87,7 @@ if !found_cnt! equ 0 (
     ) else (
         echo Zipping target folder...
         if exist "!targetDir!.zip" del /Q "!targetDir!.zip"
-        powershell -Command "Compress-Archive -Path '!targetDir!' -DestinationPath '!targetDir!.zip' -Force"
+        powershell -Command "Compress-Archive -Path '!targetDir!\*' -DestinationPath '!targetDir!.zip' -Force"
     )
 )
 
