@@ -1,7 +1,15 @@
 ﻿<div>
-    <UiButton>👽</UiButton><UiButton>🛸</UiButton><UiButton>👾</UiButton>
+    <UiButton style="@(_extend ? "" : "opacity: 50%;")" OnClick="@(() => _extend = !_extend)">👽</UiButton>
+    @if (_extend)
+    {
+        <UiButton OnClick="@(() => _dialogOpen = !_dialogOpen)">🛸</UiButton><UiButton>👾</UiButton>
+    }
+    <UiDialog @bind-Open="_dialogOpen" Title="Hello from RazorUI">
+        This dialog is rendered by SpawnDomRenderer and styled by the adopted RazorUI sheet. Click the backdrop to close.
+    </UiDialog>
 </div>
 
 @code {
-
+    bool _extend = false;
+    bool _dialogOpen = false;
 }
