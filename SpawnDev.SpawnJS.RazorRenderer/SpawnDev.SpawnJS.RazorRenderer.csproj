@@ -4,8 +4,8 @@
 		<TargetFrameworks>net10.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Version>1.0.3</Version>
-		<PackageReleaseNotes>v1.0.3 - Dependency update</PackageReleaseNotes>
+		<Version>1.0.4</Version>
+		<PackageReleaseNotes>v1.0.4 - Implicit RazorRendererService registration when using RootComponents</PackageReleaseNotes>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<EmbedAllSources>true</EmbedAllSources>
