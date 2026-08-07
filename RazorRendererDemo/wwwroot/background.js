@@ -1,2 +1,2 @@
-﻿importScripts('main.classic.js');
-
+﻿// this loads our .Net Wasm app
+importScripts('main.classic.js');
