@@ -1,0 +1,8 @@
+@* Renders raw markup via a MarkupString. Blazor emits this as a Markup frame, which the renderer inserts
+   through DOMParser.parseFromString - the Trusted Types code path (SpawnDomRenderer.ParseMarkup). Two
+   top-level nodes plus a nested one exercise the InsertMarkup sibling loop, not just a single node. *@
+<div data-markup-host>@Raw</div>
+
+@code {
+    readonly MarkupString Raw = (MarkupString)"<span class=\"mk-a\" data-mk-a>A</span><span class=\"mk-b\" data-mk-b>B<em data-mk-em>!</em></span>";
+}

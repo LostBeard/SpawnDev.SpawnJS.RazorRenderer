@@ -60,6 +60,16 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
     /// </summary>
     readonly Dictionary<string, LogicalElement> _refCaptures = new();
 
+    // ── Trusted Types ──
+    // DOMParser.parseFromString is a Trusted Types injection sink. On a host page whose CSP enforces
+    // `require-trusted-types-for 'script'` (e.g. YouTube, Gmail) it throws
+    // "This document requires 'TrustedHTML'" for a plain string, which used to abort a render batch
+    // mid-mutation (swallowed by HandleException) and leave the shadow DOM half-updated. On such pages we
+    // route markup through a policy; on every other page (no Trusted Types) we pass the raw string as before.
+    TrustedTypePolicy? _markupPolicy;
+    bool _markupPolicyResolved;
+    Callback? _markupCreateHtml;
+
     SpawnJSRootComponentMappingCollection _rootComponentMappings;
     /// <summary>
     /// Root component mappings
@@ -732,7 +742,7 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
 
         // Parse the raw markup into detached nodes. appendChild adopts them into this document.
         using var parser = new DOMParser();
-        using var parsed = parser.ParseFromString(markupFrame.MarkupContent, "text/html");
+        using var parsed = ParseMarkup(parser, markupFrame.MarkupContent);
         using var body = parsed.Body!;
 
         var logicalSiblingIndex = 0;
@@ -742,6 +752,53 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
             if (first is null) break;
             InsertLogicalChild(new LogicalElement { Node = first }, container, logicalSiblingIndex++);
         }
+    }
+
+    /// <summary>
+    /// Parses component markup into an inert document, Trusted Types safe. On a page that enforces Trusted
+    /// Types the raw string is refused at <c>parseFromString</c>, so the markup goes through a policy that
+    /// produces a <see cref="TrustedHTML"/> first; on every other page the raw string is parsed directly.
+    /// </summary>
+    Document ParseMarkup(DOMParser parser, string markup)
+    {
+        var policy = GetMarkupPolicy();
+        if (policy is null) return parser.ParseFromString(markup, "text/html");
+        using var trusted = policy.CreateHTML(markup);
+        return parser.ParseFromString(trusted, "text/html");
+    }
+
+    /// <summary>
+    /// The Trusted Type policy used to approve markup for <c>parseFromString</c>, or null when the page does
+    /// not enforce Trusted Types (the common case - the raw-string parse works there). Resolved once and
+    /// cached: the browser support and CSP do not change over the renderer's life.
+    /// </summary>
+    TrustedTypePolicy? GetMarkupPolicy()
+    {
+        if (_markupPolicyResolved) return _markupPolicy;
+        _markupPolicyResolved = true;
+
+        using var factory = _js.Get<TrustedTypePolicyFactory?>("trustedTypes");
+        if (factory is null) return null; // no Trusted Types (hackaday, a normal window, most workers)
+
+        // Identity createHTML: the output feeds an INERT DOMParser document (no script runs, no live DOM),
+        // and the markup is the app's OWN first-party component output, so passing it through unchanged is
+        // safe. A Callback (never `new Function`) because a page enforcing Trusted Types usually also blocks
+        // unsafe-eval, which would refuse an eval-built function.
+        _markupCreateHtml = Callback.Create<string, string>(s => s);
+        try
+        {
+            _markupPolicy = factory.CreatePolicy("spawndev-razorrenderer",
+                new TrustedTypePolicyOptions { CreateHTML = _markupCreateHtml });
+        }
+        catch (Exception ex)
+        {
+            // A restrictive `trusted-types` CSP allowlist that omits our policy name lands here. Fail loud
+            // with an actionable message rather than the silent, half-mutated DOM this used to cause.
+            _js.LogError($"[SpawnDomRenderer] Trusted Types is enforced but policy 'spawndev-razorrenderer' could not be created (the page's CSP trusted-types allowlist may block it). Markup will not render on this page. {ex.Message}");
+            _markupCreateHtml.Dispose();
+            _markupCreateHtml = null;
+        }
+        return _markupPolicy;
     }
 
     // ────────────────────────────────────────────────────── attributes ──
