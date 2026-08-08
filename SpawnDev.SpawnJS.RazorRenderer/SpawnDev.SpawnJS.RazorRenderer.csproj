@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Version>1.0.5</Version>
-		<PackageReleaseNotes>v1.0.4 - Implicit RazorRendererService registration when using RootComponents</PackageReleaseNotes>
+		<PackageReleaseNotes>v1.0.5 - Dependency update</PackageReleaseNotes>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<EmbedAllSources>true</EmbedAllSources>
