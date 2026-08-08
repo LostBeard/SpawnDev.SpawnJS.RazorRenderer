@@ -1,21 +1,21 @@
-﻿// Script loader works in window and worker scopes
+﻿// content.js
 (async function () {
-    async function loadScript(src) {
-        src = chrome.runtime.getURL(src);
-        if (typeof globalThis.importScripts === 'function') {
-            globalThis.importScripts(src);
-        } else if (globalThis.document) {
-            const script = document.createElement('script');
-            const loadTask = new Promise((onload, onerror) => Object.assign(script, { onload, onerror, src }));
-            (document.head || docuemnt.documentElement).append(script);
-            await loadTask;
+    // If the site's CSP rules block WebAssembly loading this handler will notify the 
+    // extension's background script and it can add a rule to enable it and reload the tab.
+    function onSecurityPolicyViolation(e) {
+        // chrome - e.blockedURI === "wasm-eval"
+        if ((e.blockedURI === "wasm-eval" || e.blockedURI === "wasm-unsafe-eval")
+            && e.violatedDirective === "script-src"
+            && e.originalPolicy.indexOf('wasm-unsafe-eval') === -1) {
+            document.removeEventListener('securitypolicyviolation', onSecurityPolicyViolation);
+            var cspViolation = {
+                documentURI: e.documentURI,                 // document.location.href
+                originalPolicy: e.originalPolicy            // csp header value
+            };
+            browser.runtime.sendMessage({ cspViolation });
         }
     }
-    // Load anything that needs to load before .Net Wasm
-    //
-    // Synchronously fired events need to be captured by Javascript and
-    // held for .Net Wasm to pick up and handle once it loads.
-    // 
-    // Load .Net Wasm app
-    await loadScript('app/main.classic.js');
+    document.addEventListener('securitypolicyviolation', onSecurityPolicyViolation);
+    // Load .Net app
+    await import(chrome.runtime.getURL('app/main.module.js'));
 })();
