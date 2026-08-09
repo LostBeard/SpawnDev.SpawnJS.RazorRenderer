@@ -51,6 +51,24 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
 
     TaskCompletionSource _init = new TaskCompletionSource();
 
+    /// <summary>
+    /// Raised after each render batch has been applied to the DOM. <c>firstRender</c> is true only for
+    /// the first batch. Mirrors <see cref="Microsoft.AspNetCore.Components.ComponentBase"/>'s
+    /// OnAfterRender, but at the renderer level so a background <b>service</b> (which is not a component)
+    /// can react to rendering - e.g. run one-time work once the UI exists. Handlers run on the renderer
+    /// Dispatcher, so they may safely touch component state. Exceptions are routed to the renderer's
+    /// error handler and never break the render.
+    /// </summary>
+    public event Action<bool>? OnAfterRender;
+    /// <summary>
+    /// Async counterpart of <see cref="OnAfterRender"/>. Raised after each render batch is applied.
+    /// Handlers are invoked on the Dispatcher but are NOT awaited by the render pipeline (fire-and-forget
+    /// with fault observation), so a long-running handler will not block rendering. <c>firstRender</c> is
+    /// true only for the first batch.
+    /// </summary>
+    public event Func<bool, Task>? OnAfterRenderAsync;
+    bool _hasRendered;
+
     const string SvgNamespace = "http://www.w3.org/2000/svg";
 
     readonly SpawnJSRuntime _js;
@@ -559,7 +577,37 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
 
         // DisposedEventHandlerIDs need no action: our listeners are keyed by (element, eventName) and are
         // disposed when the element leaves the tree, so a stale handler id can never be dispatched.
+
+        // The DOM now reflects this batch - notify after-render subscribers (services can hook here).
+        var firstRender = !_hasRendered;
+        _hasRendered = true;
+        RaiseAfterRender(firstRender);
         return Task.CompletedTask;
+    }
+
+    void RaiseAfterRender(bool firstRender)
+    {
+        // Runs on the Dispatcher (UpdateDisplayAsync is dispatched), so handlers may touch component state.
+        var sync = OnAfterRender;
+        if (sync != null)
+        {
+            try { sync(firstRender); }
+            catch (Exception ex) { HandleException(ex); }
+        }
+        var asyncHandler = OnAfterRenderAsync;
+        if (asyncHandler != null)
+        {
+            // Fire-and-forget each async handler so a long-running one (e.g. a network round-trip) does
+            // NOT block the render pipeline; faults are observed and routed to the renderer's handler.
+            foreach (Func<bool, Task> d in asyncHandler.GetInvocationList())
+                _ = InvokeAfterRenderAsync(d, firstRender);
+        }
+    }
+
+    async Task InvokeAfterRenderAsync(Func<bool, Task> handler, bool firstRender)
+    {
+        try { await handler(firstRender); }
+        catch (Exception ex) { HandleException(ex); }
     }
 
     void UpdateComponent(int componentId, ArrayBuilderSegment<RenderTreeEdit> edits, RenderTreeFrame[] frames)

@@ -1,0 +1,20 @@
+@namespace RazorRendererTests.Components
+
+@* Parent renders its own state + a parameterless child. Bump() mutates shared state and calls
+   StateHasChanged on the parent only - exactly like AppDesktop reacting to AppManager.OnChanged. *@
+<div data-rr-parent>@ReRenderState.Value</div>
+<ReRenderChild />
+<ReRenderChildParam Value="ReRenderState.Value" />
+
+@code {
+    /// <summary>Captured so a test can trigger a parent-only re-render on the dispatcher.</summary>
+    public static ReRenderParent? Instance;
+
+    protected override void OnInitialized() => Instance = this;
+
+    public void Bump()
+    {
+        ReRenderState.Value++;
+        StateHasChanged();
+    }
+}

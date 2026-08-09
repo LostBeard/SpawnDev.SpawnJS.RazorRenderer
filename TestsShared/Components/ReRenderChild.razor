@@ -1,0 +1,5 @@
+@namespace RazorRendererTests.Components
+
+@* Parameterless child. Reads shared state; does NOT subscribe or call StateHasChanged itself.
+   Its DOM should still update when its parent re-renders (standard Blazor cascade). *@
+<div data-rr-child>@ReRenderState.Value</div>

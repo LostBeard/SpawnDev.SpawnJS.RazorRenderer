@@ -1,0 +1,9 @@
+@namespace RazorRendererTests.Components
+
+@* Child that receives its value as a parameter. When the parent passes a new value, Blazor's diff
+   detects the changed parameter and re-renders this child (unlike the parameterless sibling). *@
+<div data-rr-childparam>@Value</div>
+
+@code {
+    [Parameter] public int Value { get; set; }
+}
