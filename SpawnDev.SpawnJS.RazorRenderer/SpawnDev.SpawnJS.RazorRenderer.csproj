@@ -4,8 +4,8 @@
 		<TargetFrameworks>net10.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Version>1.0.5</Version>
-		<PackageReleaseNotes>v1.0.5 - Dependency update</PackageReleaseNotes>
+		<Version>1.0.6</Version>
+		<PackageReleaseNotes>v1.0.6 - Switched RazorRenderer service to late stage startup so no razor components are rendered until all services of IAsyncBackgroundService have started completely.</PackageReleaseNotes>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<EmbedAllSources>true</EmbedAllSources>

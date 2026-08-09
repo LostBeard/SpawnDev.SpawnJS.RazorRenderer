@@ -32,12 +32,24 @@ namespace SpawnDev.SpawnJS.RazorRenderer;
 /// live as the sheet changes.
 /// </para>
 /// </summary>
-public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
+public sealed class SpawnDomRenderer : Renderer, IBackgroundService
 {
+    /// <summary>
+    /// Resolves once SpawnDomRenderer.InitAsync has finished loading<br/>
+    /// WARNING: Do NOT await this inside IAsyncBackgroundService.Ready Task in another service as <br/>
+    /// SpawnDomRenderer does not init until AFTER all IAsyncBackgroundService.Ready Tasks have completed.<br/>
+    /// </summary>
+    public Task Ready
+    {
+        get
+        {
+            // if _backgroundServiceManager is null and !_initStarted start InitAsync
+            if (_backgroundServiceManager is null && !_initStarted) _ = InitAsync();
+            return _init.Task;
+        }
+    }
 
-    Task? _ready;
-    /// <inheritdoc/>
-    public Task Ready => _ready ??= InitAsync();
+    TaskCompletionSource _init = new TaskCompletionSource();
 
     const string SvgNamespace = "http://www.w3.org/2000/svg";
 
@@ -50,6 +62,8 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
 
     /// <summary>Root logical elements whose (host) contents must be cleared on their first render.</summary>
     readonly HashSet<LogicalElement> _clearOnFirstRender = new();
+
+    Uri _appBaseUri;
 
     /// <summary>
     /// Maps a captured <c>@ref</c> id (the immutable <see cref="ElementReference.Id"/> the framework
@@ -76,12 +90,18 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
     /// </summary>
     public IEnumerable<SpawnJSRootComponentMapping> RootComponentMappings => _rootComponentMappings;
 
+    IBackgroundServiceManager? _backgroundServiceManager;
+
     /// <summary>Constructs the renderer. Called by DI; components resolve services from <paramref name="serviceProvider"/>.</summary>
     public SpawnDomRenderer(IServiceProvider serviceProvider, SpawnJSRuntime js, SpawnJSRootComponentMappingCollection rootComponentMappings)
-        : this(serviceProvider, js, rootComponentMappings, NullLoggerFactory.Instance) { }
+        : this(serviceProvider, js, rootComponentMappings, null!, NullLoggerFactory.Instance) { }
+
+    /// <summary>Constructs the renderer. Called by DI; components resolve services from <paramref name="serviceProvider"/>.</summary>
+    public SpawnDomRenderer(IServiceProvider serviceProvider, SpawnJSRuntime js, SpawnJSRootComponentMappingCollection rootComponentMappings, IBackgroundServiceManager backgroundServiceManager)
+        : this(serviceProvider, js, rootComponentMappings, backgroundServiceManager, NullLoggerFactory.Instance) { }
 
     /// <summary>Constructs the renderer with an explicit logger factory.</summary>
-    public SpawnDomRenderer(IServiceProvider serviceProvider, SpawnJSRuntime js, SpawnJSRootComponentMappingCollection rootComponentMappings, ILoggerFactory loggerFactory)
+    public SpawnDomRenderer(IServiceProvider serviceProvider, SpawnJSRuntime js, SpawnJSRootComponentMappingCollection rootComponentMappings, IBackgroundServiceManager backgroundServiceManager, ILoggerFactory loggerFactory)
         : base(serviceProvider, loggerFactory)
     {
         _js = js;
@@ -95,8 +115,13 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
                 TryAddSharedStyleSheet(styleSheetUrl, out _);
             }
         }
+        _backgroundServiceManager = backgroundServiceManager;
+        // SpawnDomRenderer uses post IAsyncBackgroundService startup which means all IBackgroundService and IAsyncBackgroundService services have started completely.
+        // This way startup mirrors how it works with SpawnDev.BlazorJS where no razor pages are rendered until AFTER all IAsyncBackgroundService services have started completely.
+        // if _backgroundServiceManager is null, the first get of Ready will start InitAsync
+        _backgroundServiceManager?.OnStarted += (bgServiceManager, globalScope) => InitAsync();
     }
-    Uri _appBaseUri;
+    bool _initStarted = false;
     /// <summary>
     /// The service BackgroundServiceManager will autostart this service be cause it implements IAsyncBackgroundService<br/>
     /// Used to render registered Window components on start up when in a Window global scope
@@ -104,18 +129,28 @@ public sealed class SpawnDomRenderer : Renderer, IAsyncBackgroundService
     /// <returns></returns>
     private async Task InitAsync()
     {
-        // Question: Do we need to wait for DOMContentLoaded event / readyState != "loading"?
-        // Render any _rootComponentMappings IF JS.GlobalScope == Window
-        if (_js.GlobalScope == GlobalScope.Window)
+        if (_initStarted) return;
+        _initStarted = true;
+        try
         {
-            if (_document != null && _rootComponentMappings.Any())
+            // Question: Do we need to wait for DOMContentLoaded event / readyState != "loading"?
+            // Render any _rootComponentMappings IF JS.GlobalScope == Window
+            if (_js.GlobalScope == GlobalScope.Window)
             {
-                UpdateDocumentCSS(true);
-                foreach (var component in _rootComponentMappings)
+                if (_document != null && _rootComponentMappings.Any())
                 {
-                    await RenderMapping(component);
+                    UpdateDocumentCSS(true);
+                    foreach (var component in _rootComponentMappings)
+                    {
+                        await RenderMapping(component);
+                    }
                 }
             }
+            _init.TrySetResult();
+        }
+        catch (Exception ex)
+        {
+            _init.TrySetException(ex);
         }
     }
     /// <summary>

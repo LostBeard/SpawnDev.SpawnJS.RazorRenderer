@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "RazorRendererDemo",
   "version": "1.0",
-  "description": "RazorRendererDemo demonstrates SpawnJS and SpawnJS.RazorRenderer in a browser extension.",
+  "description": "RazorRendererDemo demonstrates SpawnJS, RazorRenderer, and RazorUI in a browser extension.",
   "icons": {
     "128": "app/icon-128.png"
   },
