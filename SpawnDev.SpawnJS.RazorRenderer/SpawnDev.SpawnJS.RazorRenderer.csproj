@@ -4,8 +4,8 @@
 		<TargetFrameworks>net10.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Version>1.0.7</Version>
-		<PackageReleaseNotes>v1.0.7 - Added SpawnDomRenderer.OnAfterRender / OnAfterRenderAsync events so background services can react to rendering (e.g. run one-time work once the UI exists) without being components.</PackageReleaseNotes>
+		<Version>2.0.0</Version>
+		<PackageReleaseNotes>v2.0.0 - New core</PackageReleaseNotes>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<EmbedAllSources>true</EmbedAllSources>
@@ -34,7 +34,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.10" />
-		<PackageReference Include="SpawnDev.SpawnJS" Version="2.0.3" />
+		<PackageReference Include="SpawnDev.SpawnJS" Version="2.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>
