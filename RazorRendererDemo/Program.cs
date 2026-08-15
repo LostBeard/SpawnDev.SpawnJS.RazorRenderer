@@ -6,9 +6,31 @@ using SpawnDev.SpawnJS.JSObjects;
 using SpawnDev.SpawnJS.RazorRenderer;
 using SpawnDev.SpawnJS.RazorUI;
 using SpawnDev.SpawnJS.WebWorkers;
+using System.Diagnostics;
+using System.Runtime.InteropServices.JavaScript;
 
 // SpawnJSApp is a minimal DI container with SpawnJSRuntime and BackgroundServiceManager.
 var builder = SpawnJSAppBuilder.CreateDefault(args, out var JS);
+
+
+{
+    var sw = Stopwatch.StartNew();
+    var array = JS.New("Array");
+    JS.Set("_marray", array);
+    var cnt = 10000;
+    var callsPerIteration = 2;
+    for (var i = 0; i < cnt; i++)
+    {
+        using var window2 = JS.Get<JSObject>("window");
+        array.Set(i, window2);
+    }
+    var callCountTotal = callsPerIteration * cnt;
+    var costPerCall = sw.Elapsed.TotalMicroseconds / (cnt * callsPerIteration); // 2 calls per iteration, teh window get and the array index set
+    var elapsed = sw.Elapsed.TotalMicroseconds;
+    Console.WriteLine($"BlazorJS Total .Net to JS calls: {callCountTotal} Cost per call: {costPerCall} microseconds - Total elapsed: {elapsed} microseconds");
+    // 2026-08-11 SpawnJS  Total .Net to JS calls: 20000 Cost per call:  3.135 microseconds - Total elapsed:   62700 microseconds
+    // 2026-08-11 BlazorJS Total .Net to JS calls: 20000 Cost per call: 91.285 microseconds - Total elapsed: 1825700 microseconds
+}
 
 // easy way to detect if we are running in a browser extension content script
 var appBaseUri = new Uri(JS.AppBaseUri);
