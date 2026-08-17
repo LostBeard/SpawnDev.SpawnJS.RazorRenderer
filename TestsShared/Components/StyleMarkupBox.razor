@@ -1,0 +1,14 @@
+@* Reproduces the dropped-<style> bug. The MarkupString's FIRST top-level node is a <style> block - which a
+   full text/html parse hoists into <head>, so the old "read only <body>" path dropped it and the frame
+   rendered as an empty <!--!--> container. Blazor emits a MarkupString as one Markup frame, the exact path a
+   static top-level <style> in a component (e.g. SpawnDev.AI's Home.razor) takes. The rule targets a sibling
+   element with a specific color so a test can assert via getComputedStyle that the CSS actually applied, not
+   merely that the <style> node exists. *@
+<div data-style-root>@Raw</div>
+
+@code {
+    // rgb(7, 113, 219) is arbitrary but specific, so getComputedStyle can confirm THIS rule took effect.
+    readonly MarkupString Raw = (MarkupString)(
+        "<style>[data-styled]{color:rgb(7, 113, 219);}</style>" +
+        "<span class=\"sm-target\" data-styled data-style-target>styled</span>");
+}

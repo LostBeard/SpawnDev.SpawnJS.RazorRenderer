@@ -823,37 +823,44 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
     {
         var container = CreateAndInsertLogicalContainer(parent, childIndex);
 
-        // Parse the raw markup into detached nodes. appendChild adopts them into this document.
-        using var parser = new DOMParser();
-        using var parsed = ParseMarkup(parser, markupFrame.MarkupContent);
-        using var body = parsed.Body!;
+        // Parse the raw markup into detached nodes through a <template>, then adopt them by appendChild.
+        //
+        // A <template>'s content is parsed in the HTML "template" insertion mode, which keeps head-only
+        // elements - <style>, <script>, <link>, <meta>, <title> - as children in source order. Parsing the
+        // same string as a full text/html document (the old DOMParser path) instead hoists those into the
+        // document <head>; reading only <body> then dropped them, so a component whose static markup was a
+        // <style> block rendered as an empty <!--!--> container with no styles. This mirrors Blazor's own
+        // BrowserRenderer, which also parses markup via a <template>.
+        using var template = _document.CreateElement<HTMLTemplateElement>("template");
+        SetMarkup(template, markupFrame.MarkupContent);
+        using var content = template.Content;
 
         var logicalSiblingIndex = 0;
         while (true)
         {
-            var first = body.FirstChild;
+            var first = content.FirstChild;
             if (first is null) break;
             InsertLogicalChild(new LogicalElement { Node = first }, container, logicalSiblingIndex++);
         }
     }
 
     /// <summary>
-    /// Parses component markup into an inert document, Trusted Types safe. On a page that enforces Trusted
-    /// Types the raw string is refused at <c>parseFromString</c>, so the markup goes through a policy that
-    /// produces a <see cref="TrustedHTML"/> first; on every other page the raw string is parsed directly.
+    /// Sets a template element's markup, Trusted Types safe. innerHTML is a Trusted Types injection sink: on a
+    /// page that enforces Trusted Types the raw string is refused, so the markup goes through a policy that
+    /// produces a <see cref="TrustedHTML"/> first; on every other page the raw string is set directly.
     /// </summary>
-    Document ParseMarkup(DOMParser parser, string markup)
+    void SetMarkup(HTMLTemplateElement template, string markup)
     {
         var policy = GetMarkupPolicy();
-        if (policy is null) return parser.ParseFromString(markup, "text/html");
+        if (policy is null) { template.InnerHTML = markup; return; }
         using var trusted = policy.CreateHTML(markup);
-        return parser.ParseFromString(trusted, "text/html");
+        template.SetInnerHTML(trusted);
     }
 
     /// <summary>
-    /// The Trusted Type policy used to approve markup for <c>parseFromString</c>, or null when the page does
-    /// not enforce Trusted Types (the common case - the raw-string parse works there). Resolved once and
-    /// cached: the browser support and CSP do not change over the renderer's life.
+    /// The Trusted Type policy used to approve markup for a template's <c>innerHTML</c>, or null when the page
+    /// does not enforce Trusted Types (the common case - the raw-string assignment works there). Resolved once
+    /// and cached: the browser support and CSP do not change over the renderer's life.
     /// </summary>
     TrustedTypePolicy? GetMarkupPolicy()
     {
@@ -863,10 +870,10 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         using var factory = _js.Get<TrustedTypePolicyFactory?>("trustedTypes");
         if (factory is null) return null; // no Trusted Types (hackaday, a normal window, most workers)
 
-        // Identity createHTML: the output feeds an INERT DOMParser document (no script runs, no live DOM),
-        // and the markup is the app's OWN first-party component output, so passing it through unchanged is
-        // safe. A Callback (never `new Function`) because a page enforcing Trusted Types usually also blocks
-        // unsafe-eval, which would refuse an eval-built function.
+        // Identity createHTML: the output feeds an INERT <template>'s content fragment (no script runs, no
+        // live DOM until the nodes are adopted), and the markup is the app's OWN first-party component output,
+        // so passing it through unchanged is safe. A Callback (never `new Function`) because a page enforcing
+        // Trusted Types usually also blocks unsafe-eval, which would refuse an eval-built function.
         _markupCreateHtml = Callback.Create<string, string>(s => s);
         try
         {

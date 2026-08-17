@@ -29,6 +29,7 @@ namespace RazorRendererTests
             typeof(UiTreeTests),
             typeof(CascadingTests),
             typeof(TrustedTypesTests),
+            typeof(StyleMarkupTests),
             typeof(ParentChildReRenderTests),
         };
 

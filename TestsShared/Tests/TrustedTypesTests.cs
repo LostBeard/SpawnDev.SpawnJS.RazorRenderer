@@ -5,15 +5,15 @@ using SpawnDev.SpawnJS.JSObjects;
 namespace RazorRendererTests
 {
     /// <summary>
-    /// Markup (<c>MarkupString</c>) rendering goes through <c>DOMParser.parseFromString</c>, a Trusted Types
+    /// Markup (<c>MarkupString</c>) rendering sets a <c>&lt;template&gt;</c>'s <c>innerHTML</c>, a Trusted Types
     /// injection sink. On a page enforcing <c>require-trusted-types-for 'script'</c> (e.g. YouTube, Gmail) the
-    /// plain-string parse throws <c>TypeError: This document requires 'TrustedHTML'</c>, which used to abort
-    /// the render batch mid-mutation and corrupt the shadow DOM. The renderer now routes markup through a
-    /// Trusted Type policy (<see cref="SpawnDomRenderer"/>.ParseMarkup).
+    /// plain-string assignment throws <c>TypeError: This document requires 'TrustedHTML'</c>, which used to
+    /// abort the render batch mid-mutation and corrupt the shadow DOM. The renderer now routes markup through a
+    /// Trusted Type policy (<see cref="SpawnDomRenderer"/>.SetMarkup).
     /// <para>
     /// Chrome exposes <c>window.trustedTypes</c> even without CSP enforcement, so these tests drive the exact
-    /// production path - policy &#8594; <c>CreateHTML</c> &#8594; <c>ParseFromString(TrustedHTML)</c> - in a
-    /// real browser. (Active enforcement only ADDS rejection of the plain-string path; the TrustedHTML path
+    /// production path - policy &#8594; <c>CreateHTML</c> &#8594; template <c>SetInnerHTML(TrustedHTML)</c> - in
+    /// a real browser. (Active enforcement only ADDS rejection of the plain-string path; the TrustedHTML path
     /// is accepted identically with or without it.)
     /// </para>
     /// </summary>
