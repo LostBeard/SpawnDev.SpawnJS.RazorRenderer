@@ -5,8 +5,8 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
-		<Version>2.1.1</Version>
-		<PackageReleaseNotes>v2.1.1 - Dependency update</PackageReleaseNotes>
+		<Version>2.1.2</Version>
+		<PackageReleaseNotes>v2.1.2 - Dependency update</PackageReleaseNotes>
 		<Authors>LostBeard</Authors>
 		<Title>SpawnDev.SpawnJS.RazorUI</Title>
 		<Description>A small, themeable UI component library for SpawnDev.SpawnJS.RazorRenderer.</Description>
@@ -53,7 +53,7 @@
 
 	<!-- PackageReference used for Release builds -->
 	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-		<PackageReference Include="SpawnDev.SpawnJS.RazorRenderer" Version="2.1.1" />
+		<PackageReference Include="SpawnDev.SpawnJS.RazorRenderer" Version="2.1.2" />
 	</ItemGroup>
 
 	<ItemGroup>
