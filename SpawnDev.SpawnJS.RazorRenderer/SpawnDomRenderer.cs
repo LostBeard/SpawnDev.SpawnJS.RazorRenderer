@@ -780,10 +780,15 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         RenderTreeFrame frame, int frameIndex)
     {
         var tagName = frame.ElementName;
-        Element dom = tagName == "svg" || IsSvgElement(parent)
+        // An <svg> opens the namespace; anything inside one stays in it, except under <foreignObject>,
+        // which deliberately re-enters HTML. Inherited from the parent rather than asked of the DOM - see
+        // LogicalElement.IsSvg for the defect that came of asking.
+        var isSvg = tagName == "svg"
+            || (parent.IsSvg && !string.Equals(tagName, "foreignObject", StringComparison.Ordinal));
+        Element dom = isSvg
             ? _document.CreateElementNS(SvgNamespace, tagName)
             : _document.CreateElement(tagName);
-        var newElement = new LogicalElement { Node = dom };
+        var newElement = new LogicalElement { Node = dom, IsSvg = isSvg };
 
         var inserted = false;
         var descendantsEndIndexExcl = frameIndex + SubtreeLength(frame);
@@ -1015,7 +1020,11 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
     LogicalElement CreateAndInsertLogicalContainer(LogicalElement parent, int childIndex)
     {
         var containerComment = _document.CreateComment("!");
-        var container = new LogicalElement { Node = containerComment };
+        // ⚠️ A comment container is a marker, not an element, so it must PASS THE NAMESPACE THROUGH:
+        // a component or a region rendered inside an <svg> puts its content under one of these, and
+        // dropping the flag here would make that content HTML again - the same invisible-shape defect,
+        // just one level down.
+        var container = new LogicalElement { Node = containerComment, IsSvg = parent.IsSvg };
         InsertLogicalChild(container, parent, childIndex);
         return container;
     }
@@ -1254,12 +1263,6 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         {
             siblings[entry.ToSiblingIndex] = entry.MoveRangeStart!;
         }
-    }
-
-    bool IsSvgElement(LogicalElement parent)
-    {
-        var closest = GetClosestDomElement(parent);
-        return closest is Element el && el.NamespaceURI == SvgNamespace && el.TagName != "foreignObject";
     }
 
     static Node GetClosestDomElement(LogicalElement element)

@@ -27,6 +27,26 @@ internal sealed class LogicalElement
     public LogicalElement? Parent;
 
     /// <summary>
+    /// True when this node lives inside an <c>&lt;svg&gt;</c> subtree, so its children must be created in
+    /// the SVG namespace.
+    /// </summary>
+    /// <remarks>
+    /// 🔴 CARRIED, NOT LOOKED UP. It used to be asked of the DOM at creation time
+    /// (<c>closest.NamespaceURI == SvgNamespace</c>), and that answered wrong: every child of an
+    /// <c>&lt;svg&gt;</c> was created as <c>http://www.w3.org/1999/xhtml</c>. An HTML element named
+    /// "ellipse" is perfectly legal, inherits the CSS aimed at it, and reports zero geometry - so the
+    /// markup and the styles look right in devtools and NOTHING is drawn. Captain, on the avatar:
+    /// "I can use devtools to see the svg there.. but nothing is actually visible. Just an empty
+    /// borderless box", and it had been that way since the avatars were written.
+    /// <para>
+    /// ⚠️ The render tree already knows the answer - the parent chain is being built as we go - so
+    /// inheriting the flag is both correct and cheaper than the two JS property reads per element the
+    /// lookup cost.
+    /// </para>
+    /// </remarks>
+    public bool IsSvg;
+
+    /// <summary>
     /// Ordered logical children. For an <see cref="Element"/> node these are its physical descendants;
     /// for a <see cref="Comment"/> container they are its physical following siblings.
     /// </summary>
