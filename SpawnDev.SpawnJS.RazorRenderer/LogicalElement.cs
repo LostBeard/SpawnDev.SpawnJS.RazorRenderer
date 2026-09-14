@@ -27,13 +27,15 @@ internal sealed class LogicalElement
     public LogicalElement? Parent;
 
     /// <summary>
-    /// True when this node's CHILDREN must be created in the SVG namespace.
+    /// The namespace this node's CHILDREN must be created in.
     /// <para>
     /// ⚠️ This is deliberately a statement about children, not about this node. They differ on exactly one
     /// element: a <c>&lt;foreignObject&gt;</c> is itself in the SVG namespace but its content is HTML again,
-    /// so it is created with <c>createElementNS</c> and still carries <c>false</c>. Blazor asks the same
-    /// question of the DOM (<c>closest.namespaceURI === SVG &amp;&amp; closest.tagName !== 'foreignObject'</c>);
-    /// carrying it is the same predicate without the two property reads per element.
+    /// so it is created with <c>createElementNS</c> and still carries <see cref="ElementNamespace.Html"/>.
+    /// Blazor asks the same questions of the DOM
+    /// (<c>closest.namespaceURI === SVG &amp;&amp; closest.tagName !== 'foreignObject'</c>, and
+    /// <c>closest.namespaceURI === MathML</c>); carrying the answer is the same predicate without the two
+    /// property reads per element.
     /// </para>
     /// </summary>
     /// <remarks>
@@ -49,8 +51,12 @@ internal sealed class LogicalElement
     /// inheriting the flag is both correct and cheaper than the two JS property reads per element the
     /// lookup cost.
     /// </para>
+    /// <para>
+    /// MathML joined this later and rides the identical mechanism; the only asymmetry is that SVG has the
+    /// <c>&lt;foreignObject&gt;</c> exemption and MathML has none.
+    /// </para>
     /// </remarks>
-    public bool IsSvg;
+    public ElementNamespace ChildNamespace;
 
     /// <summary>
     /// Ordered logical children. For an <see cref="Element"/> node these are its physical descendants;

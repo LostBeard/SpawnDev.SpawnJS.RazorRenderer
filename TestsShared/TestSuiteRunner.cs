@@ -32,6 +32,7 @@ namespace RazorRendererTests
             typeof(StyleMarkupTests),
             typeof(ParentChildReRenderTests),
             typeof(SvgNamespaceTests),
+            typeof(MathMLNamespaceTests),
         };
 
         /// <summary>Milliseconds a test may run before it is reported as timed out. Overridable per test.</summary>

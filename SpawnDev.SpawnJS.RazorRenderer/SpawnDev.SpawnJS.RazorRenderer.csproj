@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Version>2.1.7</Version>
-		<PackageReleaseNotes>v2.1.7 - Static SVG content parsed in the HTML namespace and drew nothing; foreignObject was created as HTML</PackageReleaseNotes>
+		<PackageReleaseNotes>v2.1.7 - SVG fixes: static SVG content parsed in the HTML namespace and drew nothing, foreignObject was created as HTML. Adds MathML namespace support.</PackageReleaseNotes>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<EmbedAllSources>true</EmbedAllSources>

@@ -1,0 +1,31 @@
+@* The MathML twin of SvgBox - same three arrival paths, because they are the same mechanism and a fix to
+   one does not imply the other:
+
+     [data-mi-static]  a fully static run   -> MARKUP frame, namespace decided by the parse context
+     [data-mn-dynamic] a dynamic attribute  -> ELEMENT frame, created by the renderer
+     [data-nested]     inside an <svg> that is inside the <math>
+
+   ⚠️ MathML has no <foreignObject> equivalent here: Blazor's isMathMLElement() tests only the namespace,
+   so nothing stops propagation. The real escape is <annotation-xml encoding="text/html">, which neither
+   renderer implements. *@
+<math data-math display="block">
+    <mrow data-mrow>
+        <mi data-mi-static>x</mi>
+        <mo>=</mo>
+        <mn data-mn-dynamic mathcolor="@Color">@Value</mn>
+    </mrow>
+    <svg data-svg-in-math viewBox="0 0 10 10" width="@Size" height="@Size">
+        <circle data-nested cx="5" cy="5" r="4" />
+    </svg>
+</math>
+
+@code {
+    /// <summary>Bound to mathcolor so the mn is an element frame, not part of a static run.</summary>
+    [Parameter] public string Color { get; set; } = "red";
+
+    /// <summary>The number rendered in the dynamic mn.</summary>
+    [Parameter] public int Value { get; set; } = 42;
+
+    /// <summary>Bound to width/height so the nested svg is an element frame.</summary>
+    [Parameter] public int Size { get; set; } = 10;
+}

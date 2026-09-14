@@ -26,6 +26,19 @@ All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.Razor
   still carries `false`. An XHTML `foreignObject` lays out and clips nothing. Guard:
   `SvgNamespaceTests.ForeignObjectReEntersHtmlNamespaceTest`.
 
+### Added
+
+- **MathML namespace support.** `<math>` now opens the MathML namespace exactly as `<svg>` opens SVG, on
+  both paths - `createElementNS` for element frames, and a `mathml:mrow` parse context for markup frames.
+  Previously every MathML element was an `HTMLUnknownElement`, which renders as unstyled inline text
+  instead of maths: present, wrong, and silent. `LogicalElement.IsSvg` (bool) became
+  `LogicalElement.ChildNamespace` (`ElementNamespace` - Html/Svg/MathML); both types are `internal`, so
+  this is not a public API change. Branch order matches Blazor's - SVG is tested before MathML, so an
+  `<svg>` nested inside a `<math>` re-opens SVG for itself and its children.
+  ⚠️ MathML gets no `<foreignObject>`-style exemption, matching Blazor, whose `isMathMLElement()` tests
+  only the namespace. The real MathML escape into HTML is `<annotation-xml encoding="text/html">`, which
+  neither renderer implements. Guards: `MathMLNamespaceTests` (4 cases).
+
 ### Tests
 
 - Added `SvgNamespaceTests` (5 cases) asserting `namespaceURI` across all three ways a node reaches an

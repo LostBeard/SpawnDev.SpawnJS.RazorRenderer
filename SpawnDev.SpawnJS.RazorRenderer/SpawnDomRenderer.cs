@@ -70,6 +70,7 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
     bool _hasRendered;
 
     const string SvgNamespace = "http://www.w3.org/2000/svg";
+    const string MathMLNamespace = "http://www.w3.org/1998/Math/MathML";
 
     readonly SpawnJSRuntime _js;
     readonly Document _document;
@@ -780,8 +781,27 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         RenderTreeFrame frame, int frameIndex)
     {
         var tagName = frame.ElementName;
-        // An <svg> opens the namespace and anything inside one stays in it. Inherited from the parent
-        // rather than asked of the DOM - see LogicalElement.IsSvg for the defect that came of asking.
+        // An <svg> opens the SVG namespace and a <math> opens MathML; anything inside one stays in it.
+        // Inherited from the parent rather than asked of the DOM - see LogicalElement.ChildNamespace for
+        // the defect that came of asking.
+        //
+        // Order matters and matches Blazor's (Web.JS BrowserRenderer.ts):
+        //   tagName === 'svg'  || isSvgElement(parent)    -> SVG
+        //   tagName === 'math' || isMathMLElement(parent)  -> MathML
+        //   else                                           -> HTML
+        // so a <math> nested inside an <svg> stays SVG, exactly as it does there.
+        var elementNs =
+            tagName == "svg" || parent.ChildNamespace == ElementNamespace.Svg ? ElementNamespace.Svg :
+            tagName == "math" || parent.ChildNamespace == ElementNamespace.MathML ? ElementNamespace.MathML :
+            ElementNamespace.Html;
+        Element dom = elementNs switch
+        {
+            ElementNamespace.Svg => _document.CreateElementNS(SvgNamespace, tagName),
+            ElementNamespace.MathML => _document.CreateElementNS(MathMLNamespace, tagName),
+            _ => _document.CreateElement(tagName),
+        };
+
+        // What CHILDREN inherit, which is not the same question as this element's own namespace.
         //
         // 🔴 <foreignObject> STOPS PROPAGATION; IT IS NOT ITSELF EXEMPT. Blazor's rule (Web.JS
         // LogicalElements.ts) tests the PARENT - `closest.namespaceURI === SVG && closest.tagName !==
@@ -789,13 +809,15 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         // like any other SVG child, and only its CONTENT re-enters HTML. Excluding it from its own
         // namespace instead put the element itself in XHTML, where it is an unknown element that lays out
         // nothing and clips nothing. Guard: SvgNamespaceTests.ForeignObjectReEntersHtmlNamespaceTest.
-        var isSvg = tagName == "svg" || parent.IsSvg;
-        Element dom = isSvg
-            ? _document.CreateElementNS(SvgNamespace, tagName)
-            : _document.CreateElement(tagName);
-        // What CHILDREN inherit, which is not the same question as this element's own namespace.
-        var childrenAreSvg = isSvg && !string.Equals(tagName, "foreignObject", StringComparison.Ordinal);
-        var newElement = new LogicalElement { Node = dom, IsSvg = childrenAreSvg };
+        //
+        // ⚠️ MathML has NO equivalent exemption here, matching Blazor: isMathMLElement() tests only the
+        // namespace. The real MathML escape into HTML is <annotation-xml encoding="text/html">, which
+        // neither renderer implements.
+        var childNs = elementNs == ElementNamespace.Svg
+            && string.Equals(tagName, "foreignObject", StringComparison.Ordinal)
+                ? ElementNamespace.Html
+                : elementNs;
+        var newElement = new LogicalElement { Node = dom, ChildNamespace = childNs };
 
         var inserted = false;
         var descendantsEndIndexExcl = frameIndex + SubtreeLength(frame);
@@ -860,11 +882,17 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         //
         // ⚠️ Created per call rather than cached like Blazor's shared parse elements: a cached JS object
         // here would be a SpawnJS slot nothing collects and this renderer has no Dispose to release it in.
-        if (container.IsSvg)
+        if (container.ChildNamespace != ElementNamespace.Html)
         {
-            using var svgParseContext = _document.CreateElementNS(SvgNamespace, "g");
-            SetMarkup(svgParseContext, markupFrame.MarkupContent);
-            AdoptParsedChildren(svgParseContext, container);
+            // Blazor's context elements exactly: svg:g and mathml:mrow. A <g>/<mrow> rather than an
+            // <svg>/<math> is deliberate - the outer element would RE-OPEN the namespace for nested
+            // content instead of continuing the one already in effect.
+            var (ns, contextTag) = container.ChildNamespace == ElementNamespace.Svg
+                ? (SvgNamespace, "g")
+                : (MathMLNamespace, "mrow");
+            using var parseContext = _document.CreateElementNS(ns, contextTag);
+            SetMarkup(parseContext, markupFrame.MarkupContent);
+            AdoptParsedChildren(parseContext, container);
             return;
         }
 
@@ -886,7 +914,7 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         {
             var first = parsed.FirstChild;
             if (first is null) break;
-            InsertLogicalChild(new LogicalElement { Node = first, IsSvg = container.IsSvg }, container,
+            InsertLogicalChild(new LogicalElement { Node = first, ChildNamespace = container.ChildNamespace }, container,
                 logicalSiblingIndex++);
         }
     }
@@ -1072,7 +1100,7 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         // a component or a region rendered inside an <svg> puts its content under one of these, and
         // dropping the flag here would make that content HTML again - the same invisible-shape defect,
         // just one level down.
-        var container = new LogicalElement { Node = containerComment, IsSvg = parent.IsSvg };
+        var container = new LogicalElement { Node = containerComment, ChildNamespace = parent.ChildNamespace };
         InsertLogicalChild(container, parent, childIndex);
         return container;
     }
