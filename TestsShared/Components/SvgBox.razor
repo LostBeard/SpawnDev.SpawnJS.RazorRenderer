@@ -1,0 +1,32 @@
+@* An <svg> laid out to separate the THREE ways a node can arrive under it, because each takes a
+   different code path through the renderer and they do not fail together:
+
+     [data-static]  a fully static element  -> the Razor compiler coalesces it into a MARKUP frame,
+                    so the renderer parses a raw string and the parser picks the namespace.
+     [data-dynamic] carries a dynamic attribute -> an ELEMENT frame, created by the renderer itself
+                    via createElement/createElementNS.
+     [data-inner]   static markup under a <foreignObject>, which deliberately re-enters HTML.
+
+   This is the exact shape of UiIcon (dynamic <svg> attributes, static child geometry), which is how
+   the namespace defect stayed invisible for so long. *@
+<svg data-svg viewBox="0 0 24 24" width="@Size" height="@Size">
+    <polygon data-static points="8,5 19,12 8,19" />
+    @if (ShowDynamic)
+    {
+        <circle data-dynamic cx="12" cy="12" r="@Radius" />
+    }
+    <foreignObject data-fo x="0" y="0" width="@Size" height="@Size">
+        <div data-inner>html again</div>
+    </foreignObject>
+</svg>
+
+@code {
+    /// <summary>Bound to width/height so the &lt;svg&gt; is an element frame, not part of a static run.</summary>
+    [Parameter] public int Size { get; set; } = 24;
+
+    /// <summary>Renders the element-frame child.</summary>
+    [Parameter] public bool ShowDynamic { get; set; } = true;
+
+    /// <summary>Bound to r so the circle is an element frame, not part of a static run.</summary>
+    [Parameter] public int Radius { get; set; } = 5;
+}

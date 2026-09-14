@@ -23,8 +23,14 @@ namespace RazorRendererTests
 
             using (var svg = host.QuerySelector(".ui-icon"))
                 Assert.NotNull(svg, "UiIcon did not render an svg.ui-icon");
+            // ⚠️ This asserts the SHAPE IS PRESENT and nothing more. It used to be labelled "SVG child
+            // namespace working", which it never checked: a CSS type selector matches an element's LOCAL
+            // NAME, so this matched an HTMLUnknownElement named "polygon" just as happily as a real
+            // SVGPolygonElement, and passed throughout the time every icon rendered invisibly. The
+            // namespace guard is SvgNamespaceTests.UiIconGeometryIsInSvgNamespaceTest, which asserts
+            // namespaceURI.
             using (var poly = host.QuerySelector(".ui-icon polygon"))
-                Assert.NotNull(poly, "play icon should render a <polygon> (SVG child namespace working)");
+                Assert.NotNull(poly, "play icon should render a <polygon>");
         }
 
         /// <summary>An icon button carries its aria-label and renders the named icon inside.</summary>

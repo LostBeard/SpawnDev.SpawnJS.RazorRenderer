@@ -2,6 +2,39 @@
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
 
+## RazorRenderer 2.1.7 - 2026-09-13
+
+### Fixed
+
+- **Static SVG content rendered in the HTML namespace and drew nothing.** The Razor compiler coalesces
+  every fully static element run into a single `Markup` frame, and `InsertMarkup` parsed all of them
+  through an HTML `<template>`, which parses in the HTML namespace. In the common component shape -
+  dynamic attributes on the `<svg>`, static geometry inside it - the `<svg>` was namespaced correctly
+  while every `<polygon>`/`<circle>`/`<path>`/`<ellipse>` child became an `HTMLUnknownElement` carrying
+  the right tag name and matching the right CSS, reporting zero geometry and painting nothing. Markup
+  destined for an SVG subtree now parses in an `svg:g` context element so the fragment parser runs in
+  foreign-content mode, matching Blazor's own `BrowserRenderer`. This is the half of the namespace fix
+  that the 2.1.6 element-frame change did not cover, and it is what left `UiIcon` and consumer SVG
+  (avatars) invisible after that release. Guards:
+  `SvgNamespaceTests.StaticMarkupChildOfSvgIsInSvgNamespaceTest`,
+  `SvgNamespaceTests.UiIconGeometryIsInSvgNamespaceTest`.
+- **`<foreignObject>` itself was created in the HTML namespace.** It was excluded from the SVG namespace
+  at its own creation, but `<foreignObject>` stops namespace propagation to its *content* - the element
+  is an SVG element. Blazor's rule tests the parent
+  (`closest.namespaceURI === SVG && closest.tagName !== 'foreignObject'`); `LogicalElement.IsSvg` now
+  means "children of this node are SVG", so a `<foreignObject>` is created with `createElementNS` and
+  still carries `false`. An XHTML `foreignObject` lays out and clips nothing. Guard:
+  `SvgNamespaceTests.ForeignObjectReEntersHtmlNamespaceTest`.
+
+### Tests
+
+- Added `SvgNamespaceTests` (5 cases) asserting `namespaceURI` across all three ways a node reaches an
+  `<svg>`: element frame, markup frame, and `<foreignObject>` content. 🔴 The previous SVG assertion
+  (`querySelector(".ui-icon polygon")`, labelled "SVG child namespace working") could not fail - a CSS
+  type selector matches an element's **local name**, so it matched an `HTMLUnknownElement` named
+  `polygon` exactly as happily as a real `SVGPolygonElement`, and passed for the entire time the defect
+  was live. Suite 34 -> 39.
+
 ## RazorRenderer 1.0.7 - 2026-08-09
 
 ### Added

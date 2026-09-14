@@ -27,8 +27,14 @@ internal sealed class LogicalElement
     public LogicalElement? Parent;
 
     /// <summary>
-    /// True when this node lives inside an <c>&lt;svg&gt;</c> subtree, so its children must be created in
-    /// the SVG namespace.
+    /// True when this node's CHILDREN must be created in the SVG namespace.
+    /// <para>
+    /// ⚠️ This is deliberately a statement about children, not about this node. They differ on exactly one
+    /// element: a <c>&lt;foreignObject&gt;</c> is itself in the SVG namespace but its content is HTML again,
+    /// so it is created with <c>createElementNS</c> and still carries <c>false</c>. Blazor asks the same
+    /// question of the DOM (<c>closest.namespaceURI === SVG &amp;&amp; closest.tagName !== 'foreignObject'</c>);
+    /// carrying it is the same predicate without the two property reads per element.
+    /// </para>
     /// </summary>
     /// <remarks>
     /// 🔴 CARRIED, NOT LOOKED UP. It used to be asked of the DOM at creation time

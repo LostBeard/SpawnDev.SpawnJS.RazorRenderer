@@ -780,15 +780,22 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         RenderTreeFrame frame, int frameIndex)
     {
         var tagName = frame.ElementName;
-        // An <svg> opens the namespace; anything inside one stays in it, except under <foreignObject>,
-        // which deliberately re-enters HTML. Inherited from the parent rather than asked of the DOM - see
-        // LogicalElement.IsSvg for the defect that came of asking.
-        var isSvg = tagName == "svg"
-            || (parent.IsSvg && !string.Equals(tagName, "foreignObject", StringComparison.Ordinal));
+        // An <svg> opens the namespace and anything inside one stays in it. Inherited from the parent
+        // rather than asked of the DOM - see LogicalElement.IsSvg for the defect that came of asking.
+        //
+        // 🔴 <foreignObject> STOPS PROPAGATION; IT IS NOT ITSELF EXEMPT. Blazor's rule (Web.JS
+        // LogicalElements.ts) tests the PARENT - `closest.namespaceURI === SVG && closest.tagName !==
+        // 'foreignObject'` - so a <foreignObject> whose parent is an <svg> is created in the SVG namespace
+        // like any other SVG child, and only its CONTENT re-enters HTML. Excluding it from its own
+        // namespace instead put the element itself in XHTML, where it is an unknown element that lays out
+        // nothing and clips nothing. Guard: SvgNamespaceTests.ForeignObjectReEntersHtmlNamespaceTest.
+        var isSvg = tagName == "svg" || parent.IsSvg;
         Element dom = isSvg
             ? _document.CreateElementNS(SvgNamespace, tagName)
             : _document.CreateElement(tagName);
-        var newElement = new LogicalElement { Node = dom, IsSvg = isSvg };
+        // What CHILDREN inherit, which is not the same question as this element's own namespace.
+        var childrenAreSvg = isSvg && !string.Equals(tagName, "foreignObject", StringComparison.Ordinal);
+        var newElement = new LogicalElement { Node = dom, IsSvg = childrenAreSvg };
 
         var inserted = false;
         var descendantsEndIndexExcl = frameIndex + SubtreeLength(frame);
@@ -836,30 +843,71 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         // document <head>; reading only <body> then dropped them, so a component whose static markup was a
         // <style> block rendered as an empty <!--!--> container with no styles. This mirrors Blazor's own
         // BrowserRenderer, which also parses markup via a <template>.
+        // 🔴 A <template> PARSES IN THE HTML NAMESPACE, so markup destined for an <svg> subtree must not go
+        // through one. The Razor compiler coalesces every fully static element run into a single Markup
+        // frame, so in a component like UiIcon - dynamic attributes on the <svg>, static geometry inside it
+        // - the <svg> arrives as an element frame (namespaced correctly by InsertElement) while every
+        // <polygon>/<rect>/<path> child arrives HERE. Parsed as HTML they become HTMLUnknownElements that
+        // carry the right tag name and the right CSS and draw NOTHING, which is exactly the empty-box
+        // symptom the element-frame fix alone did not cure.
+        //
+        // The fix is Blazor's: parse in a context element that is already in the target namespace, so the
+        // HTML fragment parser runs in foreign-content mode. Blazor uses a <g> (Web.JS BrowserRenderer.ts:
+        // `document.createElementNS('http://www.w3.org/2000/svg', 'g')`), and a <g> rather than an <svg> is
+        // deliberate - an <svg> context would re-open the namespace for nested content instead of
+        // continuing the one we are already in. Guards:
+        // SvgNamespaceTests.StaticMarkupChildOfSvgIsInSvgNamespaceTest / UiIconGeometryIsInSvgNamespaceTest.
+        //
+        // ⚠️ Created per call rather than cached like Blazor's shared parse elements: a cached JS object
+        // here would be a SpawnJS slot nothing collects and this renderer has no Dispose to release it in.
+        if (container.IsSvg)
+        {
+            using var svgParseContext = _document.CreateElementNS(SvgNamespace, "g");
+            SetMarkup(svgParseContext, markupFrame.MarkupContent);
+            AdoptParsedChildren(svgParseContext, container);
+            return;
+        }
+
         using var template = _document.CreateElement<HTMLTemplateElement>("template");
         SetMarkup(template, markupFrame.MarkupContent);
         using var content = template.Content;
+        AdoptParsedChildren(content, container);
+    }
 
+    /// <summary>
+    /// Moves every parsed node out of <paramref name="parsed"/> and into <paramref name="container"/> as
+    /// logical children, in source order. Reads <c>FirstChild</c> each time because
+    /// <see cref="InsertLogicalChild"/> physically removes the node it takes.
+    /// </summary>
+    void AdoptParsedChildren(Node parsed, LogicalElement container)
+    {
         var logicalSiblingIndex = 0;
         while (true)
         {
-            var first = content.FirstChild;
+            var first = parsed.FirstChild;
             if (first is null) break;
-            InsertLogicalChild(new LogicalElement { Node = first }, container, logicalSiblingIndex++);
+            InsertLogicalChild(new LogicalElement { Node = first, IsSvg = container.IsSvg }, container,
+                logicalSiblingIndex++);
         }
     }
 
     /// <summary>
-    /// Sets a template element's markup, Trusted Types safe. innerHTML is a Trusted Types injection sink: on a
-    /// page that enforces Trusted Types the raw string is refused, so the markup goes through a policy that
-    /// produces a <see cref="TrustedHTML"/> first; on every other page the raw string is set directly.
+    /// Sets a parse context element's markup, Trusted Types safe. innerHTML is a Trusted Types injection sink:
+    /// on a page that enforces Trusted Types the raw string is refused, so the markup goes through a policy
+    /// that produces a <see cref="TrustedHTML"/> first; on every other page the raw string is set directly.
     /// </summary>
-    void SetMarkup(HTMLTemplateElement template, string markup)
+    /// <param name="context">
+    /// The element whose <c>innerHTML</c> parses the markup. Its namespace selects the fragment parsing mode,
+    /// so this is an <c>&lt;svg:g&gt;</c> for SVG content and a <c>&lt;template&gt;</c> otherwise - see
+    /// <see cref="InsertMarkup"/>.
+    /// </param>
+    /// <param name="markup">The raw markup to parse.</param>
+    void SetMarkup(Element context, string markup)
     {
         var policy = GetMarkupPolicy();
-        if (policy is null) { template.InnerHTML = markup; return; }
+        if (policy is null) { context.InnerHTML = markup; return; }
         using var trusted = policy.CreateHTML(markup);
-        template.SetInnerHTML(trusted);
+        context.SetInnerHTML(trusted);
     }
 
     /// <summary>
