@@ -124,6 +124,14 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         : base(serviceProvider, loggerFactory)
     {
         _js = js;
+        // 🔴 TAG EVERY @ref THIS RENDERER CAPTURES. The framework stamps whatever this property holds onto
+        // each ElementReference as it is captured, and Blazor's own `As<T>()` resolves a reference by
+        // asking what its Context is. With nothing here the answer was null, that extension returned a
+        // null-forgiving null, and callers got a bare NullReferenceException naming nothing.
+        //
+        // ⚠️ SET IN THE CONSTRUCTOR, and it has to be: the base property is not virtual, and a reference
+        // already tagged with null cannot be retro-fitted. See ElementReferenceExtensions beside this file.
+        ElementReferenceContext = new SpawnDomElementReferenceContext(this);
         _document = _js.Get<Document>("document")!;
         _rootComponentMappings = rootComponentMappings;
         _appBaseUri = new Uri(_js.AppBaseUri);
@@ -421,6 +429,18 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
 
     // ─────────────────────────────────────────────── element references ──
 
+    /// <summary>
+    /// Tags every <c>@ref</c> this renderer captures with a context naming this renderer, so an
+    /// <see cref="ElementReference"/> can be resolved later without knowing where it came from.
+    /// </summary>
+    /// <remarks>
+    /// 🔴 THIS IS WHAT MAKES <c>ElementReference.As&lt;T&gt;()</c> WORK HERE. The framework stamps whatever
+    /// this property returns onto each captured reference, and Blazor's own extension resolves a reference
+    /// by asking whether its context is a <c>WebElementReferenceContext</c>. Without a context of our own
+    /// the answer was "no" and that extension returned <see langword="null"/> - a null-forgiving null from a
+    /// method whose signature promises a value, so callers got a bare <c>NullReferenceException</c> naming
+    /// nothing. See the <c>As&lt;T&gt;()</c> in <c>ElementReferenceExtensions</c> beside this file.
+    /// </remarks>
     /// <summary>
     /// Resolves an <see cref="ElementReference"/> captured with <c>@ref</c> to the live SpawnJS node the
     /// renderer created for it, reinterpreted as <typeparamref name="T"/> (e.g. <c>HTMLVideoElement</c>).

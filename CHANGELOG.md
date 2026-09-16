@@ -2,6 +2,42 @@
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
 
+## RazorRenderer 2.1.10 - 2026-09-16
+
+### Fixed
+
+- **`@ref` could not be resolved with `ElementReference.As<T>()`, and failed silently.** That extension
+  ships in `SpawnDev.SpawnJS.Blazor` and resolves through `ElementReference.Context`, which it only
+  recognises as Blazor's `WebElementReferenceContext`. Under `SpawnDomRenderer` it is not, so the method
+  returned `null!` - a null-forgiving null from a signature that promises a value - and every caller got a
+  bare `NullReferenceException` naming nothing.
+
+  MEASURED 2026-09-16 in SpawnDev.AI: a chat transcript that would not scroll. The cause was blamed in
+  turn on flex layout, on scroll-anchoring logic and on image load order, through three rounds of fixes to
+  a method that had never once run, because the element lookup at the top of it silently produced nothing.
+
+  `SpawnDomRenderer` now sets `ElementReferenceContext` to a `SpawnDomElementReferenceContext` carrying
+  itself, so every `@ref` it captures knows which renderer can resolve it.
+
+### Added
+
+- **`ElementReference.As<T>()` / `.AsElement<T>()`** in the `SpawnDev.SpawnJS.RazorRenderer` namespace,
+  resolving through that context. Identical in effect to `SpawnDomRenderer.GetElement<T>()`, which remains
+  the explicit form; this is for components that do not already have the renderer to hand.
+
+  ⚠️ **Do not reference `SpawnDev.SpawnJS.Blazor` from a `SpawnDomRenderer` app.** Two equally-applicable
+  extensions with the same signature is a CS0121 ambiguity, not a silent pick. That is the correct
+  outcome and costs nothing: that package exposes only this extension and
+  `SpawnJSRunAsync(this WebAssemblyHost)`, neither of which a RazorRenderer app uses.
+
+  ⚠️ It returns `T?` deliberately. A `@ref` field is not populated until after the first render, so null
+  is a real answer and callers must handle it - the Blazor version's `T`-that-is-sometimes-null is exactly
+  what made this expensive.
+
+  ⭐ No global. Each reference carries its own renderer, so an element captured by one app resolves
+  against that app even when two .NET WASM apps share a page - which is the scenario a static
+  `Instance` would break silently.
+
 ## RazorRenderer 2.1.7 - 2026-09-13
 
 ### Fixed
