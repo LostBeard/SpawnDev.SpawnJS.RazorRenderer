@@ -2,6 +2,30 @@
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
 
+## RazorRenderer 2.1.11 - 2026-09-16
+
+### Added
+
+- **`ElementRef<T>` - a typed `@ref` target.** Write `@ref="_canvas"` against an
+  `ElementRef<HTMLCanvasElement>` field and ask it for the element: `using var canvas = _canvas.Get();`.
+  The type says what the element IS, so nothing downstream has to name the wrapper again or get it wrong.
+
+  🔴 **Why a holder rather than implicit operators on the wrappers.** A user-defined conversion must be
+  declared in the source type or the destination type. The source is Microsoft's `ElementReference`; the
+  destinations would be `HTMLCanvasElement` and friends, which live in `SpawnDev.SpawnJS` - a package that
+  deliberately does not reference `Microsoft.AspNetCore.Components` and so cannot name `ElementReference`
+  at all. Per-type operators would mean pushing a Blazor dependency into the dependency-free core. This
+  package already references Components, so one generic type declared here covers every wrapper.
+
+  ⭐ **It resolves lazily, and that is the point.** Converting at capture time would allocate a live JS
+  slot on every capture, and `@ref` re-captures on re-render - SpawnJS slots are manual, nothing collects
+  them, and the `@ref` syntax gives a component nowhere to dispose the previous value. `ElementRef<T>`
+  stores only the reference (a free struct) and hands out a wrapper when asked, for the caller to
+  `using`.
+
+  ⚠️ `Get()` returns null before the first render has captured the element, and after it leaves the tree.
+  Both are ordinary states.
+
 ## RazorRenderer 2.1.10 - 2026-09-16
 
 ### Fixed
