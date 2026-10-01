@@ -13,7 +13,7 @@ namespace RazorRendererTests
         /// <summary>Constructed by the runner.</summary>
         public UiProgressTests(IServiceProvider services) : base(services) { }
 
-        async Task<Element> RenderAsync<T>(Dictionary<string, object?> parameters) where T : Microsoft.AspNetCore.Components.IComponent
+        async Task<Element> RenderAsync<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)] T>(Dictionary<string, object?> parameters) where T : Microsoft.AspNetCore.Components.IComponent
         {
             var host = NewHost();
             var mappings = NewMappings();

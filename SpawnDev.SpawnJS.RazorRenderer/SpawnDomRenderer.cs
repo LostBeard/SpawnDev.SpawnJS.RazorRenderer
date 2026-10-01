@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.Extensions.Logging;
@@ -391,7 +392,7 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
     /// Renders <typeparamref name="TComponent"/> as a root component into <paramref name="host"/> (an
     /// element or shadow root). The host's existing children are cleared. Returns the component id.
     /// </summary>
-    public Task<int> RenderComponentAsync<TComponent>(Node host, Dictionary<string, object?>? parameters = null)
+    public Task<int> RenderComponentAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Node host, Dictionary<string, object?>? parameters = null)
         where TComponent : IComponent
         => RenderComponentAsync(typeof(TComponent), host, parameters);
 
@@ -399,21 +400,21 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
     /// Renders <typeparamref name="TComponent"/> as a root component into <paramref name="host"/> with the
     /// given root parameters.
     /// </summary>
-    public Task<int> RenderComponentAsync<TComponent>(Node host, ParameterView parameters)
+    public Task<int> RenderComponentAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Node host, ParameterView parameters)
         where TComponent : IComponent
         => RenderComponentAsync(typeof(TComponent), host, parameters);
 
     /// <summary>
     /// Renders <paramref name="componentType"/> as a root component into <paramref name="host"/>.
     /// </summary>
-    public Task<int> RenderComponentAsync(Type componentType, Node host, Dictionary<string, object?>? parameters = null)
+    public Task<int> RenderComponentAsync([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type componentType, Node host, Dictionary<string, object?>? parameters = null)
         => RenderComponentAsync(componentType, host, parameters is null ? ParameterView.Empty : ParameterView.FromDictionary(parameters));
 
     /// <summary>
     /// Renders <paramref name="componentType"/> as a root component into <paramref name="host"/> with the
     /// given root parameters.
     /// </summary>
-    public Task<int> RenderComponentAsync(Type componentType, Node host, ParameterView parameters)
+    public Task<int> RenderComponentAsync([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type componentType, Node host, ParameterView parameters)
     {
         return Dispatcher.InvokeAsync(async () =>
         {
@@ -451,7 +452,7 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
     /// DOM or inside a shadow root. The returned wrapper is a fresh JS reference the caller owns and disposes.
     /// </para>
     /// </summary>
-    public T? GetElement<T>(ElementReference reference) where T : SpawnJSObject
+    public T? GetElement<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(ElementReference reference) where T : SpawnJSObject
         => string.IsNullOrEmpty(reference.Id) ? null
          : _refCaptures.TryGetValue(reference.Id, out var le) ? le.Node.JSRefAs<T>()
          : null;

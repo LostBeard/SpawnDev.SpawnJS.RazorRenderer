@@ -5,8 +5,8 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
-		<Version>2.1.9</Version>
-		<PackageReleaseNotes>v2.1.9 - Dependency update.</PackageReleaseNotes>
+		<Version>2.2.0-local.1</Version>
+		<PackageReleaseNotes>v2.2.0 - On SpawnDev.SpawnJS.RazorRenderer 2.2.0 (SpawnDev.SpawnJS 3.0.0). Trim and NativeAOT safe (IsTrimmable, IsAotCompatible, IL warnings are build errors).</PackageReleaseNotes>
 		<Authors>LostBeard</Authors>
 		<Title>SpawnDev.SpawnJS.RazorUI</Title>
 		<Description>A small, themeable UI component library for SpawnDev.SpawnJS.RazorRenderer.</Description>
@@ -34,6 +34,10 @@
 		<StaticWebAssetsFingerprintContent>false</StaticWebAssetsFingerprintContent>
 		<!-- Disable compression (optional, based on use case) -->
 		<CompressionEnabled>false</CompressionEnabled>
+		<!-- Trim and NativeAOT safe, enforced: the analyzers run on every build and any IL2xxx/IL3xxx warning fails it. -->
+		<IsTrimmable>true</IsTrimmable>
+		<IsAotCompatible>true</IsAotCompatible>
+		<WarningsAsErrors>$(WarningsAsErrors);IL2026;IL2046;IL2057;IL2060;IL2062;IL2065;IL2067;IL2069;IL2070;IL2072;IL2073;IL2074;IL2075;IL2076;IL2077;IL2078;IL2080;IL2087;IL2088;IL2089;IL2090;IL2091;IL2092;IL2093;IL2094;IL2095;IL2106;IL2111;IL2112;IL2113;IL2114;IL3050;IL3051</WarningsAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -53,7 +57,7 @@
 
 	<!-- PackageReference used for Release builds -->
 	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-		<PackageReference Include="SpawnDev.SpawnJS.RazorRenderer" Version="2.1.9" />
+		<PackageReference Include="SpawnDev.SpawnJS.RazorRenderer" Version="2.2.0-local.1" />
 	</ItemGroup>
 
 	<ItemGroup>

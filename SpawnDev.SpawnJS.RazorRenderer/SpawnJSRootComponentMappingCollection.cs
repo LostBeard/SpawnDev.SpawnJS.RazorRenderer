@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Components;
 using SpawnDev.SpawnJS.JSObjects;
 using System.Collections.ObjectModel;
 
@@ -27,7 +28,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(Element host) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Element host) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(host);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), host, ParameterView.Empty));
@@ -40,7 +41,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(Element host, ParameterView parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Element host, ParameterView parameters) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(host);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), host, parameters));
@@ -48,7 +49,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(Element host, Dictionary<string, object?> parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Element host, Dictionary<string, object?> parameters) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(host);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), host, parameters == null ? ParameterView.Empty : ParameterView.FromDictionary(parameters)));
@@ -56,7 +57,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(Element host, AttachShadowRootOptions shadowRootOptions) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Element host, AttachShadowRootOptions shadowRootOptions) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(host);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), host, shadowRootOptions, ParameterView.Empty));
@@ -64,7 +65,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(Element host, AttachShadowRootOptions shadowRootOptions, ParameterView parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Element host, AttachShadowRootOptions shadowRootOptions, ParameterView parameters) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(host);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), host, shadowRootOptions, parameters));
@@ -72,7 +73,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(Element host, AttachShadowRootOptions shadowRootOptions, Dictionary<string, object?> parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Element host, AttachShadowRootOptions shadowRootOptions, Dictionary<string, object?> parameters) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(host);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), host, shadowRootOptions, parameters == null ? ParameterView.Empty : ParameterView.FromDictionary(parameters)));
@@ -82,7 +83,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(string selector) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(string selector) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(selector);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), selector, ParameterView.Empty));
@@ -90,7 +91,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(string selector, ParameterView parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(string selector, ParameterView parameters) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(selector);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), selector, parameters));
@@ -98,7 +99,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(string selector, Dictionary<string, object?> parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(string selector, Dictionary<string, object?> parameters) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(selector);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), selector, parameters == null ? ParameterView.Empty : ParameterView.FromDictionary(parameters)));
@@ -106,7 +107,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(string selector, AttachShadowRootOptions shadowRootOptions) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(string selector, AttachShadowRootOptions shadowRootOptions) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(selector);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), selector, shadowRootOptions, ParameterView.Empty));
@@ -114,7 +115,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(string selector, AttachShadowRootOptions shadowRootOptions, ParameterView parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(string selector, AttachShadowRootOptions shadowRootOptions, ParameterView parameters) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(selector);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), selector, shadowRootOptions, parameters));
@@ -122,7 +123,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(string selector, AttachShadowRootOptions shadowRootOptions, Dictionary<string, object?> parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(string selector, AttachShadowRootOptions shadowRootOptions, Dictionary<string, object?> parameters) where TComponent : IComponent
         {
             ArgumentNullException.ThrowIfNull(selector);
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), selector, shadowRootOptions, parameters == null ? ParameterView.Empty : ParameterView.FromDictionary(parameters)));
@@ -132,42 +133,42 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>() where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>() where TComponent : IComponent
         {
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), ParameterView.Empty));
         }
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(ParameterView parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(ParameterView parameters) where TComponent : IComponent
         {
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), parameters));
         }
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(Dictionary<string, object?> parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Dictionary<string, object?> parameters) where TComponent : IComponent
         {
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), parameters == null ? ParameterView.Empty : ParameterView.FromDictionary(parameters)));
         }
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(AttachShadowRootOptions shadowRootOptions) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(AttachShadowRootOptions shadowRootOptions) where TComponent : IComponent
         {
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), shadowRootOptions, ParameterView.Empty));
         }
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(AttachShadowRootOptions shadowRootOptions, ParameterView parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(AttachShadowRootOptions shadowRootOptions, ParameterView parameters) where TComponent : IComponent
         {
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), shadowRootOptions, parameters));
         }
         /// <summary>
         /// Adds a component mapping to the collection.
         /// </summary>
-        public SpawnJSRootComponentMapping Add<TComponent>(AttachShadowRootOptions shadowRootOptions, Dictionary<string, object?> parameters) where TComponent : IComponent
+        public SpawnJSRootComponentMapping Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(AttachShadowRootOptions shadowRootOptions, Dictionary<string, object?> parameters) where TComponent : IComponent
         {
             return AddReturn(new SpawnJSRootComponentMapping(typeof(TComponent), shadowRootOptions, parameters == null ? ParameterView.Empty : ParameterView.FromDictionary(parameters)));
         }

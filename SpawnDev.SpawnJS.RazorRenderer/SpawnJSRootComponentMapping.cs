@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Components;
 using SpawnDev.SpawnJS.JSObjects;
 
 namespace SpawnDev.SpawnJS.RazorRenderer
@@ -15,6 +16,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// IComponent type to render
         /// </summary>
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
         public Type ComponentType { get; private set; }
         /// <summary>
         /// The existing Element to render to.<br/>
@@ -47,7 +49,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, string? selector, AttachShadowRootOptions? shadowRootOptions, ParameterView parameters)
+        public SpawnJSRootComponentMapping([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type componentType, string? selector, AttachShadowRootOptions? shadowRootOptions, ParameterView parameters)
         {
             ComponentType = componentType;
             Selector = selector;
@@ -77,7 +79,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, string? selector, ParameterView parameters)
+        public SpawnJSRootComponentMapping([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type componentType, string? selector, ParameterView parameters)
         {
             ComponentType = componentType;
             Selector = selector;
@@ -86,7 +88,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, Element? host, AttachShadowRootOptions? shadowRootOptions, ParameterView parameters)
+        public SpawnJSRootComponentMapping([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type componentType, Element? host, AttachShadowRootOptions? shadowRootOptions, ParameterView parameters)
         {
             ComponentType = componentType;
             Host = host;
@@ -96,7 +98,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, Element? host, ParameterView parameters)
+        public SpawnJSRootComponentMapping([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type componentType, Element? host, ParameterView parameters)
         {
             ComponentType = componentType;
             Host = host;
@@ -105,7 +107,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, AttachShadowRootOptions? shadowRootOptions, ParameterView parameters)
+        public SpawnJSRootComponentMapping([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type componentType, AttachShadowRootOptions? shadowRootOptions, ParameterView parameters)
         {
             ComponentType = componentType;
             ShadowRootOptions = shadowRootOptions;
@@ -114,7 +116,7 @@ namespace SpawnDev.SpawnJS.RazorRenderer
         /// <summary>
         /// New instance
         /// </summary>
-        public SpawnJSRootComponentMapping(Type componentType, ParameterView parameters)
+        public SpawnJSRootComponentMapping([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type componentType, ParameterView parameters)
         {
             ComponentType = componentType;
             Parameters = parameters;
