@@ -4,7 +4,7 @@
 		<TargetFrameworks>net10.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Version>2.2.0-local.1</Version>
+		<Version>2.2.0</Version>
 		<PackageReleaseNotes>v2.2.0 - Trim and NativeAOT safe (IsTrimmable, IsAotCompatible, IL warnings are build errors); component types carry DynamicallyAccessedMembers(All), as Blazor's own Renderer APIs do. On SpawnDev.SpawnJS 3.0.0. The test suite passes on a fully trimmed publish (TrimMode=full).</PackageReleaseNotes>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>

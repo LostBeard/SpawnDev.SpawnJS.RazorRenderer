@@ -2,7 +2,7 @@
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
 
-## RazorRenderer 2.2.0 / RazorUI 2.2.0 - unreleased (local 2.2.0-local.1)
+## RazorRenderer 2.2.0 / RazorUI 2.2.0 - 2026-10-01
 
 - **On SpawnDev.SpawnJS 3.0.0** (was 2.1.17). RazorUI moves to RazorRenderer 2.2.0; the demo to SpawnJS.WebWorkers 2.2.1.
 - **Trim and NativeAOT safe, enforced** (both packages): `IsTrimmable` + `IsAotCompatible`, IL2xxx/IL3050 are build errors.
