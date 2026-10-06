@@ -2,7 +2,7 @@
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
 
-## RazorRenderer 2.2.1 / RazorUI 2.2.1 - unreleased (2.2.1-local.1 on the local feed)
+## RazorRenderer 2.2.1 / RazorUI 2.2.1 - 2026-10-06
 
 ### Fixed
 - **`@on{event}:preventDefault` and `:stopPropagation` did nothing.** Razor compiles them to attribute frames named
