@@ -18,6 +18,7 @@ namespace RazorRendererTests
             typeof(RendererCoreTests),
             typeof(EventTests),
             typeof(EventFlagAndArgsTests),
+            typeof(QueuedEventTests),
             typeof(RefTests),
             typeof(KeyedListTests),
             typeof(SharedStyleSheetTests),

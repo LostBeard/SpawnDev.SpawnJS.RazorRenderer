@@ -1,0 +1,34 @@
+@* A button whose @onclick lambda captures a per-render value, so each render makes a delegate that is NOT equal to
+   the last one: the button gets a new event handler id and the renderer drops the old one. (A lambda that captures
+   only `this` compares equal across renders and keeps its id.) Real apps do this all the time: `() => Pick(item)`
+   inside a loop. Used to prove a click still queued when that happens is not lost. *@
+@{ int renderNumber = ++_renders; }
+<div data-queued-click>
+    <button data-queued-button @onclick="() => Clicked(renderNumber)">Click</button>
+    <span data-queued-clicks>@_clicks</span>
+    <span data-queued-renders>@renderNumber</span>
+</div>
+
+@code {
+    /// <summary>The live instance, so the test can force a re-render.</summary>
+    public static QueuedClickBox? Current;
+
+    int _clicks, _renders;
+
+    /// <summary>The render whose handler took the click (-1 = none yet).</summary>
+    public int ClickedHandlerOfRender = -1;
+
+    /// <summary>Renders so far.</summary>
+    public int Renders => _renders;
+
+    protected override void OnInitialized() => Current = this;
+
+    void Clicked(int renderNumber)
+    {
+        _clicks++;
+        ClickedHandlerOfRender = renderNumber;
+    }
+
+    /// <summary>Re-renders now (call on the renderer's Dispatcher).</summary>
+    public void Rerender() => StateHasChanged();
+}

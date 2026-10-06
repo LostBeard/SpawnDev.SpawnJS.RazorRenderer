@@ -597,8 +597,9 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
             _componentLocations.Remove(disposedComponents.Array[i]);
         }
 
-        // DisposedEventHandlerIDs need no action: our listeners are keyed by (element, eventName) and are
-        // disposed when the element leaves the tree, so a stale handler id can never be dispatched.
+        // DisposedEventHandlerIDs need no action: our listeners are keyed by (element, eventName), are disposed when
+        // the element leaves the tree, and read their CURRENT handler id at dispatch time (DispatchToComponentAsync),
+        // so a handler id this batch disposed is never dispatched.
 
         // The DOM now reflects this batch - notify after-render subscribers (services can hook here).
         var firstRender = !_hasRendered;
@@ -1126,6 +1127,7 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
     void RemoveListener(LogicalElement element, string eventName)
     {
         if (element.EventListeners is null || !element.EventListeners.Remove(eventName, out var reg)) return;
+        reg.HandlerId = 0; // see DispatchToComponentAsync
         ((Element)element.Node).RemoveEventListener(eventName, reg.Callback);
         reg.Callback.Dispose();
     }
@@ -1137,16 +1139,29 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         if (registration.StopPropagation) ev.StopPropagation();
         if (registration.HandlerId == 0) return;
         var args = WebEventArgsFactory.Create(eventName, ev);
-        _ = DispatchToComponentAsync(registration.HandlerId, args);
+        _ = DispatchToComponentAsync(registration, args);
     }
 
-    async Task DispatchToComponentAsync(ulong handlerId, EventArgs eventArgs)
+    async Task DispatchToComponentAsync(EventListenerRegistration registration, EventArgs eventArgs)
     {
         try
         {
             // The DOM event callback runs off the renderer's Dispatcher; marshal onto it before dispatching
             // (which mutates component state and triggers a re-render).
-            await Dispatcher.InvokeAsync(() => DispatchEventAsync(handlerId, fieldInfo: null, eventArgs: eventArgs));
+            //
+            // 🔴 Read the handler id when the dispatch RUNS, not when the event fired. The dispatch can queue behind
+            // work already waiting on the Dispatcher (an app's async loop leaves its continuations there); if that
+            // work re-renders and gives this element a new handler id (any lambda capturing a loop variable or
+            // local does, every render), the base renderer drops the old id at once and does NOT map it to the new
+            // one for dispatch (its replacement chain is only used for @bind field updates). The old id then
+            // threw "There is no event handler associated with this event" and the click was lost (measured: 1 in
+            // 20 clicks during re-renders, QueuedEventTests; a real app's panel lost its first click). The
+            // listener's current id is the handler the user sees; 0 means the listener went away meanwhile.
+            await Dispatcher.InvokeAsync(() =>
+            {
+                ulong handlerId = registration.HandlerId;
+                return handlerId == 0 ? Task.CompletedTask : DispatchEventAsync(handlerId, fieldInfo: null, eventArgs: eventArgs);
+            });
         }
         catch (Exception ex)
         {
@@ -1259,7 +1274,11 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         }
 
         if (element.EventListeners is null) return;
-        foreach (var reg in element.EventListeners.Values) reg.Callback.Dispose();
+        foreach (var reg in element.EventListeners.Values)
+        {
+            reg.HandlerId = 0; // an event still queued for this element is dropped, not sent to a removed handler
+            reg.Callback.Dispose();
+        }
         element.EventListeners = null;
     }
 

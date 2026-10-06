@@ -2,6 +2,19 @@
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
 
+## RazorRenderer 2.2.2 - unreleased
+
+### Fixed
+- **Clicks lost while a component re-rendered.** A DOM event's dispatch can queue behind work already waiting on the
+  renderer's Dispatcher (an app's async loop leaves its continuations there). The handler id was read when the event
+  fired; if the queued work re-rendered and gave the element a new handler id (any lambda capturing a loop variable or
+  local does, every render, e.g. `() => Pick(item)`), the base renderer had already dropped the old id, and the event
+  failed with "There is no event handler associated with this event". The id is now read when the dispatch runs, so
+  the event goes to the element's current handler; an element removed meanwhile drops it quietly. Measured: 1 in 20
+  clicks lost during re-renders (`QueuedEventTests`, red without the fix); found in MiniRover, where a panel's first
+  click was often dropped while its page re-rendered from a 20 Hz loop.
+
+
 ## RazorRenderer 2.2.1 / RazorUI 2.2.1 - 2026-10-06
 
 ### Fixed

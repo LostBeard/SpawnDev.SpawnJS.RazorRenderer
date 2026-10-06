@@ -4,7 +4,7 @@
 		<TargetFrameworks>net10.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Version>2.2.1</Version>
+		<Version>2.2.2-local.1</Version>
 		<PackageReleaseNotes>v2.2.1 - @on{event}:preventDefault and :stopPropagation work (they were written into the DOM and did nothing); typed event args for every Blazor event family (pointer, wheel, touch, drag + DataTransfer, clipboard, progress, error - those handlers used to get EventArgs.Empty and never ran); MouseEventArgs.Detail / MovementX/Y. On SpawnDev.SpawnJS 3.0.2.</PackageReleaseNotes>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
