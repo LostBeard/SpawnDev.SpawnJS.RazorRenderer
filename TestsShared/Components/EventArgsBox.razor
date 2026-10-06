@@ -1,0 +1,43 @@
+@* One element per Blazor event-args family; each typed handler writes what it received. A handler whose args type the
+   renderer does not build gets EventArgs.Empty, and Blazor's cast to the typed delegate fails - nothing is written. *@
+<div data-pointer @onpointerdown="OnPointer">pointer</div>
+<div data-wheel @onwheel="OnWheel">wheel</div>
+<div data-touch @ontouchstart="OnTouch">touch</div>
+<div data-drag @ondragstart="OnDrag">drag</div>
+<div data-copy @oncopy="OnCopy">copy</div>
+<div data-progress @onprogress="OnProgress">progress</div>
+<div data-error @onerror="OnError">error</div>
+<div data-mouse @onmousedown="OnMouse">mouse</div>
+<img data-img-error @onerror="OnError" alt="" />
+<span data-last>@_last</span>
+
+@code {
+    string _last = "";
+
+    void OnPointer(PointerEventArgs e) => _last = FormattableString.Invariant(
+        $"pointer {e.Type} id={e.PointerId} w={e.Width} h={e.Height} type={e.PointerType} primary={e.IsPrimary} x={e.ClientX} pressure={e.Pressure}");
+
+    void OnWheel(WheelEventArgs e) => _last = FormattableString.Invariant($"wheel {e.Type} dy={e.DeltaY} mode={e.DeltaMode} x={e.ClientX}");
+
+    void OnTouch(TouchEventArgs e)
+    {
+        var t = e.Touches.Length > 0 ? e.Touches[0] : null;
+        _last = FormattableString.Invariant(
+            $"touch {e.Type} n={e.Touches.Length} id={t?.Identifier ?? -1} x={t?.ClientX ?? -1} changed={e.ChangedTouches.Length} ctrl={e.CtrlKey}");
+    }
+
+    void OnDrag(DragEventArgs e)
+    {
+        var dt = e.DataTransfer;
+        var item0 = dt.Items.Length > 0 ? dt.Items[0].Kind + ":" + dt.Items[0].Type : "";
+        _last = $"drag {e.Type} types={string.Join(",", dt.Types)} effect={dt.EffectAllowed} items={dt.Items.Length} item0={item0}";
+    }
+
+    void OnCopy(ClipboardEventArgs e) => _last = $"clipboard {e.Type}";
+
+    void OnProgress(ProgressEventArgs e) => _last = $"progress {e.Type} {e.Loaded}/{e.Total} computable={e.LengthComputable}";
+
+    void OnError(ErrorEventArgs e) => _last = $"error {e.Type} {e.Message} line={e.Lineno} col={e.Colno} file={e.Filename}";
+
+    void OnMouse(MouseEventArgs e) => _last = FormattableString.Invariant($"mouse {e.Type} detail={e.Detail} mx={e.MovementX} buttons={e.Buttons}");
+}

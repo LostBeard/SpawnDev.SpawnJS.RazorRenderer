@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
-		<Version>2.2.0</Version>
+		<Version>2.2.1-local.1</Version>
 		<PackageReleaseNotes>v2.2.0 - On SpawnDev.SpawnJS.RazorRenderer 2.2.0 (SpawnDev.SpawnJS 3.0.0). Trim and NativeAOT safe (IsTrimmable, IsAotCompatible, IL warnings are build errors).</PackageReleaseNotes>
 		<Authors>LostBeard</Authors>
 		<Title>SpawnDev.SpawnJS.RazorUI</Title>
@@ -57,7 +57,7 @@
 
 	<!-- PackageReference used for Release builds -->
 	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-		<PackageReference Include="SpawnDev.SpawnJS.RazorRenderer" Version="2.2.0" />
+		<PackageReference Include="SpawnDev.SpawnJS.RazorRenderer" Version="2.2.1-local.1" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -85,7 +85,14 @@ internal sealed class EventListenerRegistration
     public required string EventName;
     /// <summary>
     /// The Blazor event-handler id currently bound to this listener. Re-renders update this in place so a
-    /// changed handler reuses the one live DOM listener rather than churning add/remove.
+    /// changed handler reuses the one live DOM listener rather than churning add/remove. 0 = no handler: the listener
+    /// is only here for <see cref="PreventDefault"/> / <see cref="StopPropagation"/>.
     /// </summary>
     public ulong HandlerId;
+    /// <summary><c>@on{event}:preventDefault</c> - called on the DOM event before the handler is dispatched.</summary>
+    public bool PreventDefault;
+    /// <summary><c>@on{event}:stopPropagation</c> - the event does not reach ancestor listeners (Razor or not).</summary>
+    public bool StopPropagation;
+    /// <summary>Nothing left for this listener to do: no handler, no flag.</summary>
+    public bool Idle => HandlerId == 0 && !PreventDefault && !StopPropagation;
 }

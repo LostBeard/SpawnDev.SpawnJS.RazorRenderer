@@ -1,0 +1,17 @@
+@* @on{event}:preventDefault / :stopPropagation, with and without a handler, and toggled at runtime. *@
+<div data-parent @onclick="() => _parentClicks++">
+    <input type="checkbox" data-prevent @onclick="() => _preventClicks++" @onclick:preventDefault />
+    <input type="checkbox" data-prevent-toggle @onclick="() => _preventOn = false" @onclick:preventDefault="_preventOn" />
+    <button data-stop @onclick="() => _childClicks++" @onclick:stopPropagation>stop</button>
+    <button data-stop-only @onclick:stopPropagation>stop, no handler</button>
+    <button data-bubble @onclick="() => _childClicks++">bubble</button>
+</div>
+<span data-parent-clicks>@_parentClicks</span>
+<span data-child-clicks>@_childClicks</span>
+<span data-prevent-clicks>@_preventClicks</span>
+<span data-prevent-on>@(_preventOn ? "on" : "off")</span>
+
+@code {
+    int _parentClicks, _childClicks, _preventClicks;
+    bool _preventOn = true;
+}

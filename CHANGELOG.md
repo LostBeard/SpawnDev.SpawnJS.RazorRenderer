@@ -2,6 +2,32 @@
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
 
+## RazorRenderer 2.2.1 / RazorUI 2.2.1 - unreleased (2.2.1-local.1 on the local feed)
+
+### Fixed
+- **`@on{event}:preventDefault` and `:stopPropagation` did nothing.** Razor compiles them to attribute frames named
+  `__internal_preventDefault_on{event}` / `__internal_stopPropagation_on{event}`; the renderer wrote those into the DOM
+  as plain attributes, so the default action still ran and the event still bubbled. They now configure the element's
+  listener, called synchronously inside the browser's dispatch: with or without a handler on the element (a flag-only
+  element gets a listener that only applies it, as in Blazor), and `="cond"` turns them on and off at runtime.
+- **Typed event args for every Blazor event family.** Only mouse, keyboard, change/input and focus events got their
+  args type; every other event reached its handler as `EventArgs.Empty`, Blazor's cast to the typed delegate failed and
+  the handler never ran - e.g. any `(PointerEventArgs e) => ...`. Now built from the same event-name table as Blazor's:
+  `PointerEventArgs` (pointer*, got/lostpointercapture), `WheelEventArgs` (wheel, mousewheel), `TouchEventArgs`
+  (touch*), `DragEventArgs` with its `DataTransfer` (drag*, drop), `ClipboardEventArgs` (copy, cut, paste),
+  `ProgressEventArgs` (loadstart, progress, load, loadend, abort, timeout) and `ErrorEventArgs` (error; a plain
+  `error` Event - a broken image - gets the ErrorEvent-only members empty). `MouseEventArgs` also carries `Detail` and
+  `MovementX/Y` now.
+- On SpawnDev.SpawnJS 3.0.2 (`PointerEvent.Width/Height` as double, `DataTransfer.Types`). RazorUI moves to
+  RazorRenderer 2.2.1.
+
+### Tests
+- `EventFlagAndArgsTests` (13): preventDefault keeps a clicked checkbox unchecked while its handler runs and writes no
+  attribute; a `="cond"` flag turned off by its handler lets the next click through; stopPropagation with a handler and
+  flag-only (a bubbling button is the control); one typed handler per event family with exact values; a broken
+  image's plain `error`; a DragEvent without a dataTransfer. All 11 original cases failed before the fix.
+- **Gate:** suite 56/56, and 56/56 on a TRIMMED Release publish of WasmTestHost (TrimMode=full), served statically.
+
 ## RazorRenderer 2.2.0 / RazorUI 2.2.0 - 2026-10-01
 
 - **On SpawnDev.SpawnJS 3.0.0** (was 2.1.17). RazorUI moves to RazorRenderer 2.2.0; the demo to SpawnJS.WebWorkers 2.2.1.

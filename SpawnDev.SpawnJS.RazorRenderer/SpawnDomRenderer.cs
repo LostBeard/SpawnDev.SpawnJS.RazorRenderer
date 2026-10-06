@@ -1000,6 +1000,14 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
         var attributeName = attributeFrame.AttributeName;
         var eventHandlerId = attributeFrame.AttributeEventHandlerId;
 
+        // @on{event}:preventDefault / :stopPropagation compile to these attribute frames. They configure the event
+        // listener and are never markup: written as attributes they did nothing, so the default action still ran.
+        if (attributeName.StartsWith(InternalAttributePrefix, StringComparison.Ordinal))
+        {
+            ApplyEventFlag(element, attributeName, attributeFrame.AttributeValue);
+            return;
+        }
+
         if (eventHandlerId != 0)
         {
             SetListener(element, StripOnPrefix(attributeName), eventHandlerId, componentId);
@@ -1011,11 +1019,18 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
 
     void SetOrRemoveAttributeOrProperty(LogicalElement element, string name, object? valueOrNullToRemove)
     {
-        // Removing an event handler: drop the live DOM listener we own.
-        if (valueOrNullToRemove is null && IsOnEventName(name)
-            && element.EventListeners is not null && element.EventListeners.ContainsKey(StripOnPrefix(name)))
+        if (name.StartsWith(InternalAttributePrefix, StringComparison.Ordinal))
         {
-            RemoveListener(element, StripOnPrefix(name));
+            ApplyEventFlag(element, name, valueOrNullToRemove);
+            return;
+        }
+
+        // Removing an event handler: drop the live DOM listener we own (kept while an event flag still needs it).
+        if (valueOrNullToRemove is null && IsOnEventName(name)
+            && element.EventListeners is not null && element.EventListeners.TryGetValue(StripOnPrefix(name), out var registration))
+        {
+            registration.HandlerId = 0;
+            if (registration.Idle) RemoveListener(element, StripOnPrefix(name));
             return;
         }
 
@@ -1068,19 +1083,44 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
 
     void SetListener(LogicalElement element, string eventName, ulong handlerId, int componentId)
     {
-        element.EventListeners ??= new();
-        if (element.EventListeners.TryGetValue(eventName, out var existing))
-        {
-            // Reuse the one live DOM listener; just rebind the handler id.
-            existing.HandlerId = handlerId;
-            return;
-        }
+        // Reuses the one live DOM listener when there is one; just rebinds the handler id.
+        EnsureListener(element, eventName).HandlerId = handlerId;
+    }
 
-        var registration = new EventListenerRegistration { Callback = null!, EventName = eventName, HandlerId = handlerId };
+    EventListenerRegistration EnsureListener(LogicalElement element, string eventName)
+    {
+        element.EventListeners ??= new();
+        if (element.EventListeners.TryGetValue(eventName, out var existing)) return existing;
+        var registration = new EventListenerRegistration { Callback = null!, EventName = eventName };
         var callback = Callback.Create<Event>(ev => OnDomEvent(registration, eventName, ev));
         registration.Callback = callback;
         element.EventListeners[eventName] = registration;
         ((Element)element.Node).AddEventListener(eventName, callback);
+        return registration;
+    }
+
+    const string InternalAttributePrefix = "__internal_";
+    const string PreventDefaultAttributePrefix = "__internal_preventDefault_";
+    const string StopPropagationAttributePrefix = "__internal_stopPropagation_";
+
+    /// <summary>
+    /// <c>@on{event}:preventDefault[="bool"]</c> / <c>:stopPropagation</c>: Razor emits an attribute named
+    /// <c>__internal_preventDefault_on{event}</c> (Blazor's RenderTreeBuilder.AddEventPreventDefaultAttribute), true to
+    /// set, removed (or false) to clear. A flag works with or without a handler on the element, as in Blazor: a
+    /// flag-only element gets a listener that only applies it.
+    /// </summary>
+    void ApplyEventFlag(LogicalElement element, string attributeName, object? value)
+    {
+        bool prevent = attributeName.StartsWith(PreventDefaultAttributePrefix, StringComparison.Ordinal);
+        if (!prevent && !attributeName.StartsWith(StopPropagationAttributePrefix, StringComparison.Ordinal)) return;   // no other internal attribute is markup either
+        var eventName = StripOnPrefix(attributeName[(prevent ? PreventDefaultAttributePrefix : StopPropagationAttributePrefix).Length..]);
+        bool on = value is bool b ? b : value is not null;
+        EventListenerRegistration? registration;
+        if (on) registration = EnsureListener(element, eventName);
+        else if (element.EventListeners is null || !element.EventListeners.TryGetValue(eventName, out registration)) return;
+        if (prevent) registration.PreventDefault = on;
+        else registration.StopPropagation = on;
+        if (registration.Idle) RemoveListener(element, eventName);
     }
 
     void RemoveListener(LogicalElement element, string eventName)
@@ -1092,6 +1132,10 @@ public sealed class SpawnDomRenderer : Renderer, IBackgroundService
 
     void OnDomEvent(EventListenerRegistration registration, string eventName, Event ev)
     {
+        // Synchronously, inside the browser's dispatch: preventDefault after an await would be too late.
+        if (registration.PreventDefault) ev.PreventDefault();
+        if (registration.StopPropagation) ev.StopPropagation();
+        if (registration.HandlerId == 0) return;
         var args = WebEventArgsFactory.Create(eventName, ev);
         _ = DispatchToComponentAsync(registration.HandlerId, args);
     }
