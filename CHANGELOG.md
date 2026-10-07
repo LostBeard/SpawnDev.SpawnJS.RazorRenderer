@@ -2,7 +2,7 @@
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
 
-## RazorRenderer 2.2.2 - unreleased
+## RazorRenderer 2.2.2 / RazorUI 2.2.2 - 2026-10-06
 
 ### Fixed
 - **Clicks lost while a component re-rendered.** A DOM event's dispatch can queue behind work already waiting on the
@@ -13,6 +13,7 @@ All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.Razor
   the event goes to the element's current handler; an element removed meanwhile drops it quietly. Measured: 1 in 20
   clicks lost during re-renders (`QueuedEventTests`, red without the fix); found in MiniRover, where a panel's first
   click was often dropped while its page re-rendered from a 20 Hz loop.
+- RazorUI 2.2.2 pins RazorRenderer 2.2.2, so RazorUI apps get the fix (no RazorUI code change).
 
 
 ## RazorRenderer 2.2.1 / RazorUI 2.2.1 - 2026-10-06
