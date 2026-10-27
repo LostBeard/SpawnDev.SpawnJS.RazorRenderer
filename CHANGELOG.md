@@ -1,6 +1,14 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
+
+## RazorRenderer 2.2.3 / RazorUI 2.2.3 - 2026-10-27
+
+### Release
+- **RazorRenderer depends on SpawnDev.SpawnJS 3.0.5** (was 3.0.2). 3.0.5 fixes `JSTape` allocating memory quadratic in
+  the size of a call once its arguments outgrew one tape segment (64 KB); a big call could run the browser out of
+  memory. RazorUI 2.2.3 pins RazorRenderer 2.2.3 so its consumers get it too. No change of their own. The demo moves to
+  SpawnDev.SpawnJS.WebWorkers 2.2.5. Full suite 57/57.
 
 ## RazorRenderer 2.2.2 / RazorUI 2.2.2 - 2026-10-06
 
