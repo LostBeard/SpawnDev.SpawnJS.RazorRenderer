@@ -2,6 +2,10 @@
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
 
+## RazorRenderer 2.2.4 / RazorUI 2.2.4 - 2026-11-16
+
+- **RazorRenderer depends on SpawnDev.SpawnJS 3.0.10 (was 3.0.5): WebAuthn JSON converters, trimmed apps about 630 KB smaller (a narrower trim descriptor) and the 3.0.6 - 3.0.8 fixes (see SpawnDev.SpawnJS's CHANGELOG). An app that got SpawnJS only through this package stayed on 3.0.5.** RazorUI moves to RazorRenderer 2.2.4. No change of their own. RazorRendererDemo moves to SpawnDev.SpawnJS.WebWorkers 2.2.6.
+
 ## RazorRenderer 2.2.3 / RazorUI 2.2.3 - 2026-10-27
 
 ### Release

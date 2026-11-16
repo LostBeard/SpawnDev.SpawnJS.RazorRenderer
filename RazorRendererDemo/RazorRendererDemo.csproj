@@ -16,7 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SpawnDev.SpawnJS.WebWorkers" Version="2.2.5" />
+		<PackageReference Include="SpawnDev.SpawnJS.WebWorkers" Version="2.2.6" />
 	</ItemGroup>
 
 	<ItemGroup>
