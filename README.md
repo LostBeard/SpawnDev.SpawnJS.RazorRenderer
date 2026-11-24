@@ -1,6 +1,13 @@
+<div align="center">
+
 # SpawnDev.SpawnJS.RazorRenderer
-[![NuGet](https://img.shields.io/nuget/dt/SpawnDev.SpawnJS.RazorRenderer.svg?label=SpawnDev.SpawnJS.RazorRenderer)](https://www.nuget.org/packages/SpawnDev.SpawnJS.RazorRenderer)  
-[![GitHub Sponsor](https://img.shields.io/github/sponsors/LostBeard?label=Sponsor&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/LostBeard)
+
+[![NuGet](https://img.shields.io/nuget/v/SpawnDev.SpawnJS.RazorRenderer.svg?label=nuget&logo=nuget)](https://www.nuget.org/packages/SpawnDev.SpawnJS.RazorRenderer)
+[![Downloads](https://img.shields.io/nuget/dt/SpawnDev.SpawnJS.RazorRenderer.svg?label=downloads)](https://www.nuget.org/packages/SpawnDev.SpawnJS.RazorRenderer)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.txt)
+[![Sponsor](https://img.shields.io/badge/sponsor-LostBeard-ea4aaa.svg?logo=githubsponsors)](https://github.com/sponsors/LostBeard)
+
+</div>
 
 > SpawnDev libraries are built and maintained by the SpawnDev development team, which uses AI agents in its daily work.
 
