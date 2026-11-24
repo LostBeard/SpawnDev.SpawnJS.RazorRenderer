@@ -1,7 +1,7 @@
 # SpawnDev.SpawnJS.RazorRenderer
 [![NuGet](https://img.shields.io/nuget/dt/SpawnDev.SpawnJS.RazorRenderer.svg?label=SpawnDev.SpawnJS.RazorRenderer)](https://www.nuget.org/packages/SpawnDev.SpawnJS.RazorRenderer)  
 
-> 💜 **Built and maintained by one independent developer** — no company, no overhead, just code. If SpawnDev.SpawnJS.RazorRenderer saves you time, please consider [**sponsoring its development »**](https://github.com/sponsors/LostBeard). Sponsorship is what keeps it alive and maintained.
+> SpawnDev libraries are built and maintained by the SpawnDev development team, which uses AI agents in its daily work.
 
 Interactive Blazor components in .NET WebAssembly **without the Blazor JS runtime.**
 
@@ -153,6 +153,10 @@ currently per element, which is correct but not yet optimized).
 - .NET 10 WebAssembly
 - [SpawnDev.SpawnJS](https://www.nuget.org/packages/SpawnDev.SpawnJS)
 - `Microsoft.AspNetCore.Components.Web` (referenced transitively; the Blazor SDK is used only to compile `.razor`)
+
+## Support
+
+SpawnDev.SpawnJS.RazorRenderer is 100% MIT licensed and developed in public: anyone can use it, fork it and build on it. If it saves you time, you can [sponsor its development](https://github.com/sponsors/LostBeard).
 
 ## The SpawnDev Crew
 
