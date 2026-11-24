@@ -1,5 +1,6 @@
 # SpawnDev.SpawnJS.RazorRenderer
 [![NuGet](https://img.shields.io/nuget/dt/SpawnDev.SpawnJS.RazorRenderer.svg?label=SpawnDev.SpawnJS.RazorRenderer)](https://www.nuget.org/packages/SpawnDev.SpawnJS.RazorRenderer)  
+[![GitHub Sponsor](https://img.shields.io/github/sponsors/LostBeard?label=Sponsor&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/LostBeard)
 
 > SpawnDev libraries are built and maintained by the SpawnDev development team, which uses AI agents in its daily work.
 
