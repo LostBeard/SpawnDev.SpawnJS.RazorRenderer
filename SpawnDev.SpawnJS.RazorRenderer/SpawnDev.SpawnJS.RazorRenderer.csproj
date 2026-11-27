@@ -4,8 +4,8 @@
 		<TargetFrameworks>net10.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Version>2.2.4</Version>
-		<PackageReleaseNotes>v2.2.4 - Depends on SpawnDev.SpawnJS 3.0.10 (was 3.0.5): WebAuthn JSON converters, trimmed apps about 630 KB smaller (a narrower trim descriptor) and the 3.0.6 - 3.0.8 fixes (see SpawnDev.SpawnJS's CHANGELOG). An app that got SpawnJS only through this package stayed on 3.0.5. No change of its own. v2.2.1 - @on{event}:preventDefault and :stopPropagation work (they were written into the DOM and did nothing); typed event args for every Blazor event family (pointer, wheel, touch, drag + DataTransfer, clipboard, progress, error - those handlers used to get EventArgs.Empty and never ran); MouseEventArgs.Detail / MovementX/Y. On SpawnDev.SpawnJS 3.0.2.</PackageReleaseNotes>
+		<Version>2.2.5</Version>
+		<PackageReleaseNotes>v2.2.5 - Depends on SpawnDev.SpawnJS 3.0.12: SpawnJSRuntime.AppBaseUri works under Node (a .NET WebAssembly console app); it was empty there. v2.2.4 - Depends on SpawnDev.SpawnJS 3.0.10 (was 3.0.5): WebAuthn JSON converters, trimmed apps about 630 KB smaller (a narrower trim descriptor) and the 3.0.6 - 3.0.8 fixes (see SpawnDev.SpawnJS's CHANGELOG). An app that got SpawnJS only through this package stayed on 3.0.5. No change of its own. v2.2.1 - @on{event}:preventDefault and :stopPropagation work (they were written into the DOM and did nothing); typed event args for every Blazor event family (pointer, wheel, touch, drag + DataTransfer, clipboard, progress, error - those handlers used to get EventArgs.Empty and never ran); MouseEventArgs.Detail / MovementX/Y. On SpawnDev.SpawnJS 3.0.2.</PackageReleaseNotes>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<EmbedAllSources>true</EmbedAllSources>
@@ -38,7 +38,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.10" />
-		<PackageReference Include="SpawnDev.SpawnJS" Version="3.0.10" />
+		<PackageReference Include="SpawnDev.SpawnJS" Version="3.0.12" />
 	</ItemGroup>
 
 	<ItemGroup>

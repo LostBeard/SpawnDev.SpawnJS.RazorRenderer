@@ -2,6 +2,12 @@
 
 All notable changes to SpawnDev.SpawnJS.RazorRenderer and SpawnDev.SpawnJS.RazorUI.
 
+## 2.2.5 - 2026-11-26 - SpawnDev.SpawnJS 3.0.12
+
+- Depends on SpawnDev.SpawnJS 3.0.12 (was 3.0.10). No code change.
+- SpawnDev.SpawnJS 3.0.12: `SpawnJSRuntime.AppBaseUri` works under Node (a .NET WebAssembly console app); it was
+  empty there (`self` is not declared in Node, and `file:` URLs have the origin "null").
+
 ## RazorRenderer 2.2.4 / RazorUI 2.2.4 - 2026-11-16
 
 - **RazorRenderer depends on SpawnDev.SpawnJS 3.0.10 (was 3.0.5): WebAuthn JSON converters, trimmed apps about 630 KB smaller (a narrower trim descriptor) and the 3.0.6 - 3.0.8 fixes (see SpawnDev.SpawnJS's CHANGELOG). An app that got SpawnJS only through this package stayed on 3.0.5.** RazorUI moves to RazorRenderer 2.2.4. No change of their own. RazorRendererDemo moves to SpawnDev.SpawnJS.WebWorkers 2.2.6.
